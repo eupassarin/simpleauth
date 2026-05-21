@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleAuth.Configuration;
@@ -195,10 +196,11 @@ internal static class AuthorizationEndpoint
         bool authTooOld = maxAge.HasValue && sessionAuthTime.HasValue &&
                           (DateTimeOffset.UtcNow.ToUnixTimeSeconds() - sessionAuthTime.Value) > maxAge.Value;
 
+        string prompt = ReadParameter(context, "prompt");
+
         if (string.IsNullOrWhiteSpace(subjectId) || authTooOld)
         {
             // OIDC §3.1.2.6: prompt=none MUST return login_required if not authenticated.
-            string prompt = ReadParameter(context, "prompt");
             if (string.Equals(prompt, "none", StringComparison.OrdinalIgnoreCase))
             {
                 await RedirectOrErrorAsync(context, redirectUri, state, "login_required", "The user is not authenticated.", serverState.Issuer);
@@ -213,6 +215,26 @@ internal static class AuthorizationEndpoint
             return;
         }
 
+        // OIDC §3.1.2.6: prompt=login MUST force re-authentication even if the user has an active session.
+        if (string.Equals(prompt, "login", StringComparison.OrdinalIgnoreCase))
+        {
+            // Sign out and redirect to login page so the user must re-authenticate.
+            try
+            {
+                await context.SignOutAsync(cfg.Interaction.CookieScheme);
+            }
+            catch (InvalidOperationException)
+            {
+                // No cookie handler registered — non-fatal.
+            }
+
+            string returnUrlLogin = context.Request.Path + context.Request.QueryString;
+            string loginUrlForce = $"{cfg.Interaction.LoginPath}?{Uri.EscapeDataString(cfg.Interaction.ReturnUrlParameter)}={Uri.EscapeDataString(returnUrlLogin)}";
+            context.Response.StatusCode = StatusCodes.Status302Found;
+            context.Response.Headers.Location = loginUrlForce;
+            return;
+        }
+
         // Check consent
         if (client.RequireConsent)
         {
@@ -222,7 +244,6 @@ internal static class AuthorizationEndpoint
 
             if (!hasConsent)
             {
-                string prompt = ReadParameter(context, "prompt");
                 if (string.Equals(prompt, "none", StringComparison.OrdinalIgnoreCase))
                 {
                     await RedirectOrErrorAsync(context, redirectUri, state, "consent_required", "User consent is required.", serverState.Issuer);

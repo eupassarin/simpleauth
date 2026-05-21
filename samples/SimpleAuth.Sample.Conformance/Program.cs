@@ -236,13 +236,20 @@ app.MapGet("/autologout", async (HttpContext ctx) =>
 {
     await ctx.SignOutAsync("SimpleAuth.Cookie");
     return Results.Content("""
-        <!DOCTYPE html><html><head><title>Logged Out</title>
-        <meta http-equiv="refresh" content="2;url=/">
-        <style>body{font-family:system-ui;max-width:500px;margin:4rem auto;text-align:center;background:#111;color:#eee}</style>
+        <!DOCTYPE html><html><head><title>Logged Out — Ready for Test</title>
+        <meta http-equiv="refresh" content="3;url=/">
+        <style>body{font-family:system-ui;max-width:600px;margin:4rem auto;text-align:center;background:#111;color:#eee}
+        .ready{background:#052e16;border:2px solid #22c55e;border-radius:8px;padding:1.5rem;margin:1.5rem 0}
+        </style>
         </head><body>
-        <h2>✅ Session cleared</h2>
-        <p>You are now logged out. You can proceed with the <strong>prompt-none-not-logged-in</strong> conformance test.</p>
-        <p><a href="/" style="color:#60a5fa">← Back to home</a></p>
+        <h2>✅ Session Cleared</h2>
+        <div class="ready">
+          <p style="font-size:1.1rem;margin:0"><strong style="color:#86efac">You are now logged out.</strong></p>
+          <p style="margin:0.75rem 0 0">Go back to the conformance suite and run the
+          <strong><code style="background:#064e3b;padding:0.2rem 0.5rem">oidcc-prompt-none-not-logged-in</code></strong>
+          test <em>immediately</em> — before doing anything else that logs you back in.</p>
+        </div>
+        <p><a href="/" style="color:#60a5fa">← Back to home</a> (auto-redirecting in 3 seconds)</p>
         </body></html>
         """, "text/html");
 });
@@ -260,7 +267,25 @@ app.MapGet("/status", () => Results.Ok(new
 // SimpleAuth endpoints
 app.MapSimpleAuth();
 
-app.MapGet("/", () => Results.Content($$"""
+app.MapGet("/", (HttpContext httpContext) =>
+{
+    bool isAuthenticated = httpContext.User.Identity?.IsAuthenticated == true;
+    string? currentSub = httpContext.User.FindFirst("sub")?.Value ?? httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    string sessionBanner = isAuthenticated
+        ? $"""
+          <div style="background:#7f1d1d;border:2px solid #ef4444;border-radius:8px;padding:1rem 1.5rem;margin:1rem 0">
+          <strong style="color:#fca5a5;font-size:1.1rem">⚠️ ACTIVE SESSION DETECTED</strong>
+          <p style="margin:0.5rem 0 0">You are currently logged in as <code style="background:#450a0a;padding:0.2rem 0.4rem">{currentSub}</code>.</p>
+          <p style="margin:0.5rem 0 0;color:#fca5a5">You <strong>MUST log out before running <code>prompt-none-not-logged-in</code></strong> — otherwise that test will FAIL.</p>
+          <p style="margin:1rem 0 0"><a href="/autologout" style="background:#ef4444;color:#fff;padding:0.5rem 1.2rem;border-radius:4px;text-decoration:none;font-weight:600;font-size:1rem">🚪 LOGOUT NOW</a></p>
+          </div>
+          """
+        : """
+          <div style="background:#052e16;border:2px solid #22c55e;border-radius:8px;padding:0.8rem 1.5rem;margin:1rem 0">
+          <strong style="color:#86efac">✅ No active session</strong> — ready to run <code style="background:#064e3b;padding:0.2rem 0.4rem">prompt-none-not-logged-in</code>
+          </div>
+          """;
+    return Results.Content($$"""
 <!DOCTYPE html>
 <html>
 <head><title>SimpleAuth — Conformance Suite Deployment</title>
@@ -273,6 +298,8 @@ a{color:#60a5fa}pre{background:#1a1a2e;padding:1rem;border-radius:8px;overflow-x
 <body>
 <h1>⚡ SimpleAuth Conformance Suite</h1>
 <p>This server is configured for the <a href="https://www.certification.openid.net/">OpenID Foundation Conformance Suite</a>.</p>
+
+{{sessionBanner}}
 
 <div class="card">
 <h3>🔗 Endpoints</h3>
@@ -320,7 +347,11 @@ Client ID:          simpleauth-basic
 Client Secret:      conformance-secret-basic
 </pre></li>
 <li>Run the tests — when prompted to login, enter <code>{{testUserSub}}</code> as username</li>
-<li>⚠️ Before running <strong>prompt-none-not-logged-in</strong>: click the <strong>Logout</strong> button above (or visit <a href="/autologout"><code>/autologout</code></a>) to clear your session</li>
+<li style="background:#1a0a00;border-left:3px solid #f59e0b;padding:0.5rem 1rem;list-style:none;border-radius:0 4px 4px 0">
+  ⚠️ <strong>For <code>oidcc-prompt-none-not-logged-in</code>:</strong> visit
+  <a href="/autologout"><strong>/autologout</strong></a> in the <strong>same browser</strong> the conformance suite uses,
+  then immediately run that specific test. The session banner at the top of this page shows your current status.
+</li>
 <li>All tests should pass for the Basic OP profile ✅</li>
 </ol>
 </div>
@@ -336,7 +367,8 @@ docker run -p 8080:8080 \
 
 <p style="text-align:center;margin-top:2rem"><span class="badge">✓ Ready for certification</span></p>
 </body></html>
-""", "text/html"));
+""", "text/html");
+});
 
 await app.RunAsync();
 

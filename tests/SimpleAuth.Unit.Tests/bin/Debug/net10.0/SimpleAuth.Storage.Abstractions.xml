@@ -556,7 +556,7 @@
             <summary>Redirect URI used in the original authorization request.</summary>
         </member>
         <member name="P:SimpleAuth.AuthorizationCode.CodeChallenge">
-            <summary>SHA-256 PKCE code challenge (RFC 7636 §4.2). Never <c>null</c> — PKCE is mandatory.</summary>
+            <summary>SHA-256 PKCE code challenge (RFC 7636 §4.2). <c>null</c> when client does not require PKCE.</summary>
         </member>
         <member name="P:SimpleAuth.AuthorizationCode.GrantedScopes">
             <summary>Scopes granted at the authorization endpoint.</summary>
@@ -569,6 +569,19 @@
         </member>
         <member name="P:SimpleAuth.AuthorizationCode.Nonce">
             <summary>Nonce from the authorization request, included in the ID token.</summary>
+        </member>
+        <member name="P:SimpleAuth.AuthorizationCode.AuthTime">
+            <summary>
+            Unix timestamp (seconds) of when the End-User was authenticated.
+            Populated when the authorization request included <c>max_age</c>.
+            OIDC Core §3.1.2.1: <c>auth_time</c> MUST appear in the ID token when <c>max_age</c> was used.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.AuthorizationCode.AcrValue">
+            <summary>
+            Authentication Context Class Reference value to include in the ID token.
+            Set from the first value of the <c>acr_values</c> request parameter (OIDC Core §3.1.2.1).
+            </summary>
         </member>
         <member name="P:SimpleAuth.AuthorizationCode.SessionId">
             <summary>Session identifier from the user's authentication session.</summary>
@@ -703,10 +716,10 @@
             <summary>Space-separated scope string from the PAR request.</summary>
         </member>
         <member name="P:SimpleAuth.ParEntry.CodeChallenge">
-            <summary>PKCE code challenge (S256 is the only supported method).</summary>
+            <summary>PKCE code challenge (S256 is the only supported method). Null when PKCE is not used.</summary>
         </member>
         <member name="P:SimpleAuth.ParEntry.CodeChallengeMethod">
-            <summary>PKCE code challenge method — always "S256".</summary>
+            <summary>PKCE code challenge method — "S256" or null when PKCE is not used.</summary>
         </member>
         <member name="P:SimpleAuth.ParEntry.ResponseType">
             <summary>response_type from the PAR request. Should always be "code".</summary>

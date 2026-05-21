@@ -581,6 +581,7 @@
         <member name="M:SimpleAuth.Endpoints.UserInfoEndpoint.GetPresentedToken(Microsoft.AspNetCore.Http.HttpContext,System.String@)">
             <summary>
             Reads the raw access token string from the request, accepting both <c>Bearer</c> and <c>DPoP</c> schemes.
+            Also accepts <c>access_token</c> in POST body per RFC 6750 §2.2 (optional form parameter method).
             Outputs the scheme used so callers can enforce DPoP scheme requirement (RFC 9449 §7.1).
             </summary>
         </member>
@@ -824,6 +825,11 @@
             </summary>
         </member>
         <member name="P:SimpleAuth.Serialization.AuthJsonContext.UserInfoResponse">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.DictionaryStringString">
             <summary>
             Defines the source generated JSON serialization contract metadata for a given type.
             </summary>
