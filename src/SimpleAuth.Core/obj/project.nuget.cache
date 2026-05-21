@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "mzVkRGi3nM8=",
+  "success": true,
+  "projectFilePath": "/Users/andrealmeida/simpleauth/src/SimpleAuth.Core/SimpleAuth.Core.csproj",
+  "expectedPackageFiles": [
+    "/Users/andrealmeida/.nuget/packages/microsoft.identitymodel.abstractions/8.18.0/microsoft.identitymodel.abstractions.8.18.0.nupkg.sha512",
+    "/Users/andrealmeida/.nuget/packages/microsoft.identitymodel.jsonwebtokens/8.18.0/microsoft.identitymodel.jsonwebtokens.8.18.0.nupkg.sha512",
+    "/Users/andrealmeida/.nuget/packages/microsoft.identitymodel.logging/8.18.0/microsoft.identitymodel.logging.8.18.0.nupkg.sha512",
+    "/Users/andrealmeida/.nuget/packages/microsoft.identitymodel.tokens/8.18.0/microsoft.identitymodel.tokens.8.18.0.nupkg.sha512",
+    "/Users/andrealmeida/.nuget/packages/microsoft.net.illink.tasks/10.0.5/microsoft.net.illink.tasks.10.0.5.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>SimpleAuth.EntityFramework</RootNamespace>
+    <AssemblyName>SimpleAuth.Storage.EntityFramework</AssemblyName>
+    <PackageId>SimpleAuth.Storage.EntityFramework</PackageId>
+    <Description>EF Core store implementations for SimpleAuth — SQL Server, PostgreSQL, SQLite and any relational provider.</Description>
+    <!-- EF Core uses runtime reflection — opt out of AOT analysis inherited from Directory.Build.props -->
+    <IsAotCompatible>false</IsAotCompatible>
+    <EnableTrimAnalyzer>false</EnableTrimAnalyzer>
+    <EnableSingleFileAnalyzer>false</EnableSingleFileAnalyzer>
+    <!-- EF Core entities are instantiated by the EF runtime via reflection (CA1812).
+         IL2026/IL3050: JSON serialization in this non-AOT package is intentional. -->
+    <NoWarn>IL2026;IL3050;CA1812</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SimpleAuth.Storage.Abstractions\SimpleAuth.Storage.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

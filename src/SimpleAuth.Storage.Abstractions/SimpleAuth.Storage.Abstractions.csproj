@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SimpleAuth</RootNamespace>
+    <AssemblyName>SimpleAuth.Storage.Abstractions</AssemblyName>
+    <PackageId>SimpleAuth.Storage.Abstractions</PackageId>
+    <Description>Storage store interfaces for SimpleAuth — zero dependencies.</Description>
+  </PropertyGroup>
+</Project>

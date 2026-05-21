@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>SimpleAuth.Storage.EntityFramework</id>
+    <version>0.1.0</version>
+    <authors>SimpleAuth Contributors</authors>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <readme>README.md</readme>
+    <projectUrl>https://github.com/eupassarin/SimpleAuth</projectUrl>
+    <description>EF Core store implementations for SimpleAuth — SQL Server, PostgreSQL, SQLite and any relational provider.</description>
+    <copyright>Copyright © SimpleAuth Contributors</copyright>
+    <tags>oauth2 oidc openid authorization-server dotnet aot</tags>
+    <repository type="git" url="https://github.com/eupassarin/SimpleAuth" />
+    <dependencies>
+      <group targetFramework="net10.0">
+        <dependency id="SimpleAuth.Storage.Abstractions" version="0.1.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.EntityFrameworkCore" version="10.0.8" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.EntityFrameworkCore.Relational" version="10.0.8" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.DependencyInjection.Abstractions" version="10.0.8" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/bin/Release/net10.0/SimpleAuth.Storage.EntityFramework.dll" target="lib/net10.0/SimpleAuth.Storage.EntityFramework.dll" />
+    <file src="/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/bin/Release/net10.0/SimpleAuth.Storage.EntityFramework.xml" target="lib/net10.0/SimpleAuth.Storage.EntityFramework.xml" />
+    <file src="/Users/andrealmeida/simpleauth/README.md" target="/README.md" />
+  </files>
+</package>

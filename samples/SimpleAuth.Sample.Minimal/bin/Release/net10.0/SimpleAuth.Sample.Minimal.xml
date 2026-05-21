@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SimpleAuth.Sample.Minimal</name>
+    </assembly>
+    <members>
+        <member name="T:Program">
+            <summary>
+            Auto-generated public partial Program class for top-level statement apps.
+            </summary>
+        </member>
+        <member name="T:SampleClaimsEnricher">
+            <summary>
+            Demonstrates how to inject custom identity claims into every
+            ID token and UserInfo response via <see cref="T:SimpleAuth.IClaimsEnricher"/>.
+            </summary>
+        </member>
+    </members>
+</doc>

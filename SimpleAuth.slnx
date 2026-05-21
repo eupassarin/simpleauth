@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/SimpleAuth.Sample.Full/SimpleAuth.Sample.Full.csproj" />
+    <Project Path="samples/SimpleAuth.Sample.Minimal/SimpleAuth.Sample.Minimal.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/SimpleAuth.Core/SimpleAuth.Core.csproj" />
+    <Project Path="src/SimpleAuth.Storage.Abstractions/SimpleAuth.Storage.Abstractions.csproj" />
+    <Project Path="src/SimpleAuth.Storage.EntityFramework/SimpleAuth.Storage.EntityFramework.csproj" />
+    <Project Path="src/SimpleAuth.Storage.InMemory/SimpleAuth.Storage.InMemory.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SimpleAuth.Unit.Tests/SimpleAuth.Unit.Tests.csproj" />
+    <Project Path="tests/SimpleAuth.Conformance.Tests/SimpleAuth.Conformance.Tests.csproj" />
+    <Project Path="tests/SimpleAuth.EntityFramework.Tests/SimpleAuth.EntityFramework.Tests.csproj" />
+    <Project Path="tests/SimpleAuth.Integration.Tests/SimpleAuth.Integration.Tests.csproj" />
+    <Project Path="tests/SimpleAuth.Security.Tests/SimpleAuth.Security.Tests.csproj" />
+  </Folder>
+</Solution>

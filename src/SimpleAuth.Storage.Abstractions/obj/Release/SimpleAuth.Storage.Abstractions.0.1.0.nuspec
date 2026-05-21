@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>SimpleAuth.Storage.Abstractions</id>
+    <version>0.1.0</version>
+    <authors>SimpleAuth Contributors</authors>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <readme>README.md</readme>
+    <projectUrl>https://github.com/eupassarin/SimpleAuth</projectUrl>
+    <description>Storage store interfaces for SimpleAuth — zero dependencies.</description>
+    <copyright>Copyright © SimpleAuth Contributors</copyright>
+    <tags>oauth2 oidc openid authorization-server dotnet aot</tags>
+    <repository type="git" url="https://github.com/eupassarin/SimpleAuth" />
+    <dependencies>
+      <group targetFramework="net10.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.Abstractions/bin/Release/net10.0/SimpleAuth.Storage.Abstractions.dll" target="lib/net10.0/SimpleAuth.Storage.Abstractions.dll" />
+    <file src="/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.Abstractions/bin/Release/net10.0/SimpleAuth.Storage.Abstractions.xml" target="lib/net10.0/SimpleAuth.Storage.Abstractions.xml" />
+    <file src="/Users/andrealmeida/simpleauth/README.md" target="/README.md" />
+  </files>
+</package>

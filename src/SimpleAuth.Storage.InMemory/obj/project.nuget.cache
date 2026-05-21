@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "Xazt1NLzxpA=",
+  "success": true,
+  "projectFilePath": "/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.InMemory/SimpleAuth.Storage.InMemory.csproj",
+  "expectedPackageFiles": [
+    "/Users/andrealmeida/.nuget/packages/microsoft.net.illink.tasks/10.0.5/microsoft.net.illink.tasks.10.0.5.nupkg.sha512"
+  ],
+  "logs": []
+}

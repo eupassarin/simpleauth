@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build & Test (.NET ${{ matrix.dotnet }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        dotnet: [ "10.0.x" ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed for GitVersioning / source link
+
+      - name: Setup .NET ${{ matrix.dotnet }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet }}
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build (warn as errors)
+        run: dotnet build --no-restore -c Release
+
+      - name: Test
+        run: >
+          dotnet test --no-build -c Release
+          --logger "trx;LogFileName=results.trx"
+          --results-directory ./test-results
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.dotnet }}
+          path: ./test-results/*.trx
+          retention-days: 7
+
+  # ── AOT smoke test ──────────────────────────────────────────────────────────
+  aot-publish:
+    name: AOT publish smoke test
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Install AOT prerequisites
+        run: sudo apt-get install -y clang zlib1g-dev
+
+      - name: AOT publish (minimal sample)
+        run: >
+          dotnet publish samples/SimpleAuth.Sample.Minimal/SimpleAuth.Sample.Minimal.csproj
+          -c Release
+          -r linux-x64
+          --self-contained
+          -p:PublishAot=true
+          -o ./publish/aot
+
+      - name: Verify binary exists
+        run: test -f ./publish/aot/SimpleAuth.Sample.Minimal
+
+      - name: Upload AOT binary size report
+        uses: actions/upload-artifact@v4
+        with:
+          name: aot-binary
+          path: ./publish/aot/SimpleAuth.Sample.Minimal
+          retention-days: 3

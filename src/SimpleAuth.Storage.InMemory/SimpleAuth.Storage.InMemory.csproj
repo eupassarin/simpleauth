@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SimpleAuth</RootNamespace>
+    <AssemblyName>SimpleAuth.Storage.InMemory</AssemblyName>
+    <PackageId>SimpleAuth.Storage.InMemory</PackageId>
+    <Description>In-memory store implementations for SimpleAuth — development and testing.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SimpleAuth.Storage.Abstractions\SimpleAuth.Storage.Abstractions.csproj" />
+  </ItemGroup>
+</Project>

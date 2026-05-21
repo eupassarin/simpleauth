@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "SimpleAuth.Storage.InMemory/0.1.0": {
+        "dependencies": {
+          "SimpleAuth.Storage.Abstractions": "0.1.0"
+        },
+        "runtime": {
+          "SimpleAuth.Storage.InMemory.dll": {}
+        }
+      },
+      "SimpleAuth.Storage.Abstractions/0.1.0": {
+        "runtime": {
+          "SimpleAuth.Storage.Abstractions.dll": {
+            "assemblyVersion": "0.1.0.0",
+            "fileVersion": "0.1.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "SimpleAuth.Storage.InMemory/0.1.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "SimpleAuth.Storage.Abstractions/0.1.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

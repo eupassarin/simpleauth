@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SimpleAuth.Security.Tests</name>
+    </assembly>
+    <members>
+        <member name="T:SimpleAuth.Security.Tests.SecurityTests">
+            <summary>
+            Negative and adversarial protocol scenarios.
+            These tests verify that security boundaries hold under attack conditions.
+            </summary>
+        </member>
+        <member name="T:SimpleAuth.Security.Tests.TestClaimsEnricher">
+            <summary>Minimal enricher used in pipeline tests.</summary>
+        </member>
+    </members>
+</doc>

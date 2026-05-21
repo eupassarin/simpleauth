@@ -1,0 +1,15 @@
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/bin/Release/net10.0/SimpleAuth.Storage.EntityFramework.deps.json
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/bin/Release/net10.0/SimpleAuth.Storage.EntityFramework.dll
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/bin/Release/net10.0/SimpleAuth.Storage.EntityFramework.xml
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/bin/Release/net10.0/SimpleAuth.Storage.Abstractions.dll
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/bin/Release/net10.0/SimpleAuth.Storage.Abstractions.xml
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/obj/Release/net10.0/SimpleAuth.Storage.EntityFramework.csproj.AssemblyReference.cache
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/obj/Release/net10.0/SimpleAuth.Storage.EntityFramework.GeneratedMSBuildEditorConfig.editorconfig
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/obj/Release/net10.0/SimpleAuth.Storage.EntityFramework.AssemblyInfoInputs.cache
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/obj/Release/net10.0/SimpleAuth.Storage.EntityFramework.AssemblyInfo.cs
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/obj/Release/net10.0/SimpleAuth.Storage.EntityFramework.csproj.CoreCompileInputs.cache
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/obj/Release/net10.0/SimpleAu.AA1C27C4.Up2Date
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/obj/Release/net10.0/SimpleAuth.Storage.EntityFramework.dll
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/obj/Release/net10.0/refint/SimpleAuth.Storage.EntityFramework.dll
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/obj/Release/net10.0/SimpleAuth.Storage.EntityFramework.xml
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.EntityFramework/obj/Release/net10.0/ref/SimpleAuth.Storage.EntityFramework.dll

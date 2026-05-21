@@ -1,0 +1,5 @@
+{
+  "SimpleAuth.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/andrealmeida\/simpleauth\/src\/SimpleAuth.Core",
+  "SimpleAuth.Storage.Abstractions, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/andrealmeida\/simpleauth\/src\/SimpleAuth.Storage.Abstractions",
+  "SimpleAuth.Storage.InMemory, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/andrealmeida\/simpleauth\/src\/SimpleAuth.Storage.InMemory"
+}

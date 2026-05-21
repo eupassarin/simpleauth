@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SimpleAuth</RootNamespace>
+    <AssemblyName>SimpleAuth.Core</AssemblyName>
+    <PackageId>SimpleAuth.Core</PackageId>
+    <Description>OAuth 2.1 + OpenID Connect authorization server for .NET 10 — Native AOT first.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.*" />
+    <ProjectReference Include="..\SimpleAuth.Storage.InMemory\SimpleAuth.Storage.InMemory.csproj" />
+    <ProjectReference Include="..\SimpleAuth.Storage.Abstractions\SimpleAuth.Storage.Abstractions.csproj" />
+  </ItemGroup>
+</Project>
