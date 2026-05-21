@@ -182,6 +182,69 @@ public sealed class IdTokenConformanceTests(ConformanceFixture fixture) : IClass
         Assert.False(root.TryGetProperty("password", out _));
     }
 
+    /// <summary>
+    /// OIDC Core §5.4 / OIDF EnsureIdTokenDoesNotContainEmailForScopeEmail:
+    /// scope=email grants access to email in UserInfo only; email MUST NOT appear in ID token.
+    /// </summary>
+    [Fact]
+    public async Task IdToken_EmailScope_EmailNotInIdToken()
+    {
+        using JsonDocument tokens = await TestHelpers.PerformAuthCodeFlowAsync(
+            Client, "public-spa", "https://spa.example/callback", "openid email", "alice");
+
+        string idToken = tokens.RootElement.GetProperty("id_token").GetString()!;
+        using JsonDocument payload = TestHelpers.DecodeJwtPayload(idToken);
+        JsonElement root = payload.RootElement;
+
+        Assert.False(root.TryGetProperty("email", out _),
+            "email MUST NOT appear in ID token when scope=email (OIDC Core §5.4, OIDF EnsureIdTokenDoesNotContainEmailForScopeEmail)");
+        Assert.False(root.TryGetProperty("email_verified", out _),
+            "email_verified MUST NOT appear in ID token when scope=email");
+    }
+
+    /// <summary>
+    /// OIDC Core §5.4: scope=phone grants access to phone claims in UserInfo only.
+    /// </summary>
+    [Fact]
+    public async Task IdToken_PhoneScope_PhoneNotInIdToken()
+    {
+        using JsonDocument tokens = await TestHelpers.PerformAuthCodeFlowAsync(
+            Client, "public-spa", "https://spa.example/callback", "openid phone", "alice");
+
+        string idToken = tokens.RootElement.GetProperty("id_token").GetString()!;
+        using JsonDocument payload = TestHelpers.DecodeJwtPayload(idToken);
+        JsonElement root = payload.RootElement;
+
+        Assert.False(root.TryGetProperty("phone_number", out _),
+            "phone_number MUST NOT appear in ID token when scope=phone (UserInfo-only claim)");
+        Assert.False(root.TryGetProperty("phone_number_verified", out _),
+            "phone_number_verified MUST NOT appear in ID token when scope=phone");
+    }
+
+    /// <summary>
+    /// OIDC Core §5.1: updated_at and auth_time MUST be numeric values (Unix timestamps), not strings.
+    /// </summary>
+    [Fact]
+    public async Task IdToken_NumericClaims_AreNumbers()
+    {
+        using JsonDocument tokens = await TestHelpers.PerformAuthCodeFlowAsync(
+            Client, "public-spa", "https://spa.example/callback", "openid profile", "alice");
+
+        string idToken = tokens.RootElement.GetProperty("id_token").GetString()!;
+        using JsonDocument payload = TestHelpers.DecodeJwtPayload(idToken);
+        JsonElement root = payload.RootElement;
+
+        // iat, exp are always present and must be numbers
+        Assert.Equal(JsonValueKind.Number, root.GetProperty("iat").ValueKind);
+        Assert.Equal(JsonValueKind.Number, root.GetProperty("exp").ValueKind);
+
+        // updated_at must be a number when present (OIDC Core §5.1)
+        if (root.TryGetProperty("updated_at", out JsonElement updatedAt))
+        {
+            Assert.Equal(JsonValueKind.Number, updatedAt.ValueKind);
+        }
+    }
+
     private async Task<string> GetIdTokenAsync(string clientId = "public-spa")
     {
         string redirectUri = clientId == "confidential-code"

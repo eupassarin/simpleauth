@@ -29,7 +29,7 @@
             </summary>
         </member>
         <member name="T:SimpleAuth.Conformance.Tests.TestClaimsEnricher">
-            <summary>Test claims enricher providing profile and email claims.</summary>
+            <summary>Test claims enricher providing profile, email, phone, and address claims.</summary>
         </member>
         <member name="T:SimpleAuth.Conformance.Tests.DiscoveryConformanceTests">
             <summary>
@@ -67,6 +67,22 @@
             <summary>
             OIDC Conformance: ID Token Validation (OIDC Core §3.1.3.7)
             Validates structure, claims, and signing of ID tokens.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Conformance.Tests.IdTokenConformanceTests.IdToken_EmailScope_EmailNotInIdToken">
+            <summary>
+            OIDC Core §5.4 / OIDF EnsureIdTokenDoesNotContainEmailForScopeEmail:
+            scope=email grants access to email in UserInfo only; email MUST NOT appear in ID token.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Conformance.Tests.IdTokenConformanceTests.IdToken_PhoneScope_PhoneNotInIdToken">
+            <summary>
+            OIDC Core §5.4: scope=phone grants access to phone claims in UserInfo only.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Conformance.Tests.IdTokenConformanceTests.IdToken_NumericClaims_AreNumbers">
+            <summary>
+            OIDC Core §5.1: updated_at and auth_time MUST be numeric values (Unix timestamps), not strings.
             </summary>
         </member>
         <member name="T:SimpleAuth.Conformance.Tests.RefreshTokenConformanceTests">

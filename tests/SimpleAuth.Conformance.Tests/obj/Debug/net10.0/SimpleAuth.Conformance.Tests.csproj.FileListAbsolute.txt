@@ -1,13 +1,4 @@
 /Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/bin/Debug/net10.0/.msCoverageSourceRootsMapping_SimpleAuth.Conformance.Tests
-/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAuth.Conformance.Tests.csproj.AssemblyReference.cache
-/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/rpswa.dswa.cache.json
-/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/MvcTestingAppManifest.json
-/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAuth.Conformance.Tests.GeneratedMSBuildEditorConfig.editorconfig
-/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAuth.Conformance.Tests.AssemblyInfoInputs.cache
-/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAuth.Conformance.Tests.AssemblyInfo.cs
-/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAuth.Conformance.Tests.csproj.CoreCompileInputs.cache
-/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAuth.Conformance.Tests.MvcApplicationPartsAssemblyInfo.cache
-/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAuth.Conformance.Tests.xml
 /Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/bin/Debug/net10.0/xunit.abstractions.dll
 /Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/bin/Debug/net10.0/MvcTestingAppManifest.json
 /Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/bin/Debug/net10.0/SimpleAuth.Conformance.Tests.staticwebassets.endpoints.json
@@ -415,6 +406,14 @@
 /Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/bin/Debug/net10.0/SimpleAuth.Core.xml
 /Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/bin/Debug/net10.0/SimpleAuth.Storage.InMemory.xml
 /Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/bin/Debug/net10.0/SimpleAuth.Storage.Abstractions.xml
+/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAuth.Conformance.Tests.csproj.AssemblyReference.cache
+/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/rpswa.dswa.cache.json
+/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/MvcTestingAppManifest.json
+/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAuth.Conformance.Tests.GeneratedMSBuildEditorConfig.editorconfig
+/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAuth.Conformance.Tests.AssemblyInfoInputs.cache
+/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAuth.Conformance.Tests.AssemblyInfo.cs
+/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAuth.Conformance.Tests.csproj.CoreCompileInputs.cache
+/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAuth.Conformance.Tests.MvcApplicationPartsAssemblyInfo.cache
 /Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/rjimswa.dswa.cache.json
 /Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/rjsmrazor.dswa.cache.json
 /Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/rjsmcshtml.dswa.cache.json
@@ -427,5 +426,6 @@
 /Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAu.1CAE7C25.Up2Date
 /Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAuth.Conformance.Tests.dll
 /Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/refint/SimpleAuth.Conformance.Tests.dll
+/Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAuth.Conformance.Tests.xml
 /Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/SimpleAuth.Conformance.Tests.genruntimeconfig.cache
 /Users/andrealmeida/simpleauth/tests/SimpleAuth.Conformance.Tests/obj/Debug/net10.0/ref/SimpleAuth.Conformance.Tests.dll

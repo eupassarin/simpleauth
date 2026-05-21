@@ -63,7 +63,7 @@ public sealed class ConformanceFixture : IAsyncLifetime
                     ClientId = "public-spa",
                     ClientName = "Public SPA Client",
                     AllowedGrantTypes = [GrantType.AuthorizationCode, GrantType.RefreshToken],
-                    AllowedScopes = [StandardScope.OpenId, StandardScope.Profile, StandardScope.Email, StandardScope.OfflineAccess],
+                    AllowedScopes = [StandardScope.OpenId, StandardScope.Profile, StandardScope.Email, StandardScope.Phone, StandardScope.Address, StandardScope.OfflineAccess],
                     RedirectUris = ["https://spa.example/callback"],
                     RequireClientSecret = false,
                     RequirePkce = true,
@@ -151,7 +151,7 @@ public sealed class ConformanceFixture : IAsyncLifetime
     }
 }
 
-/// <summary>Test claims enricher providing profile and email claims.</summary>
+/// <summary>Test claims enricher providing profile, email, phone, and address claims.</summary>
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "DI.")]
 internal sealed class TestClaimsEnricher : IClaimsEnricher
 {
@@ -161,12 +161,24 @@ internal sealed class TestClaimsEnricher : IClaimsEnricher
         {
             context.Claims.Add(new Claim("name", $"Test User {context.SubjectId}"));
             context.Claims.Add(new Claim("preferred_username", context.SubjectId));
+            context.Claims.Add(new Claim("updated_at", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()));
         }
 
         if (context.GrantedScopes.Contains(StandardScope.Email, StringComparer.Ordinal))
         {
             context.Claims.Add(new Claim("email", $"{context.SubjectId}@test.example"));
-            context.Claims.Add(new Claim("email_verified", "true"));
+            context.Claims.Add(new Claim("email_verified", "true", ClaimValueTypes.Boolean));
+        }
+
+        if (context.GrantedScopes.Contains(StandardScope.Phone, StringComparer.Ordinal))
+        {
+            context.Claims.Add(new Claim("phone_number", "+1-555-0100"));
+            context.Claims.Add(new Claim("phone_number_verified", "true", ClaimValueTypes.Boolean));
+        }
+
+        if (context.GrantedScopes.Contains(StandardScope.Address, StringComparer.Ordinal))
+        {
+            context.Claims.Add(new Claim("address", """{"formatted":"123 Test St","locality":"Testville","country":"US"}"""));
         }
 
         return ValueTask.CompletedTask;

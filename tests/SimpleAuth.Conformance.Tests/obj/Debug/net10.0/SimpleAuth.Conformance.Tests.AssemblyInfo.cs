@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyCopyrightAttribute("Copyright © SimpleAuth Contributors")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1812a8ae57aa51ba864d18b6548344caf4b8a2ae")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+78a1dc6333ba1d2cbf7b62ae312740d036b364b4")]
 [assembly: System.Reflection.AssemblyProductAttribute("SimpleAuth")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SimpleAuth.Conformance.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
