@@ -206,7 +206,21 @@ public static class SimpleAuthExtensions
             IdTokenSigningAlgValuesSupported = [configuration.Keys.Algorithm ?? "ES256"],
             ScopesSupported = [StandardScope.OpenId, StandardScope.Profile, StandardScope.Email, StandardScope.Address, StandardScope.Phone, StandardScope.OfflineAccess],
             TokenEndpointAuthMethodsSupported = [AuthMethod.ClientSecretBasic, AuthMethod.ClientSecretPost, AuthMethod.PrivateKeyJwt, AuthMethod.None],
-            ClaimsSupported = ["sub", "iss", "aud", "exp", "iat", "nonce", "name", "email", "email_verified"],
+            ClaimsSupported =
+            [
+                // Standard JWT/OIDC claims (always present)
+                "sub", "iss", "aud", "exp", "iat", "auth_time", "nonce", "acr", "amr", "azp",
+                // scope=profile claims (OIDC Core §5.4)
+                "name", "family_name", "given_name", "middle_name", "nickname",
+                "preferred_username", "profile", "picture", "website",
+                "gender", "birthdate", "zoneinfo", "locale", "updated_at",
+                // scope=email claims
+                "email", "email_verified",
+                // scope=phone claims
+                "phone_number", "phone_number_verified",
+                // scope=address claims
+                "address",
+            ],
             CodeChallengeMethodsSupported = ["S256"],
             PushedAuthorizationRequestEndpoint = configuration.Par.Enabled ? $"{baseUrl}/connect/par" : null,
             RequirePushedAuthorizationRequests = configuration.Par.Enabled && configuration.Par.Required ? true : null,
