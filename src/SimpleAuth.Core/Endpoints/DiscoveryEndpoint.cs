@@ -57,6 +57,7 @@ internal static class AuthorizationEndpoint
         }
 
         SimpleAuthServerConfiguration cfg = context.RequestServices.GetRequiredService<SimpleAuthServerConfiguration>();
+        SimpleAuthServerState serverState = context.RequestServices.GetRequiredService<SimpleAuthServerState>();
 
         string responseType;
         string clientId;
@@ -64,8 +65,8 @@ internal static class AuthorizationEndpoint
         string scopeValue;
         string state;
         string nonce;
-        string codeChallenge;
-        string codeChallengeMethod;
+        string? codeChallenge;
+        string? codeChallengeMethod;
         string responseMode;
 
         // RFC 9126 §4 — if request_uri is present, load params from the PAR entry.
@@ -155,15 +156,15 @@ internal static class AuthorizationEndpoint
             return;
         }
 
-        if (!PkceValidator.IsMethodAllowed(codeChallengeMethod) || string.IsNullOrWhiteSpace(codeChallenge))
+        if (client.RequirePkce && (!PkceValidator.IsMethodAllowed(codeChallengeMethod) || string.IsNullOrWhiteSpace(codeChallenge)))
         {
-            await RedirectOrErrorAsync(context, redirectUri, state, "invalid_request", "PKCE S256 is required.");
+            await RedirectOrErrorAsync(context, redirectUri, state, "invalid_request", "PKCE S256 is required.", serverState.Issuer);
             return;
         }
 
         if (!client.AllowedGrantTypes.Contains(GrantType.AuthorizationCode, StringComparer.Ordinal))
         {
-            await RedirectOrErrorAsync(context, redirectUri, state, "unauthorized_client", "authorization_code is not allowed for this client.");
+            await RedirectOrErrorAsync(context, redirectUri, state, "unauthorized_client", "authorization_code is not allowed for this client.", serverState.Issuer);
             return;
         }
 
@@ -171,19 +172,36 @@ internal static class AuthorizationEndpoint
         IReadOnlyList<string> grantedScopes = ValidateScopes(client, requestedScopes);
         if (grantedScopes.Count == 0)
         {
-            await RedirectOrErrorAsync(context, redirectUri, state, "invalid_scope", "No valid scopes were requested.");
+            await RedirectOrErrorAsync(context, redirectUri, state, "invalid_scope", "No valid scopes were requested.", serverState.Issuer);
             return;
         }
 
         ClaimsPrincipal? user = context.User;
         string? subjectId = user?.FindFirst("sub")?.Value ?? user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrWhiteSpace(subjectId))
+
+        // Read max_age from the request (OIDC Core §3.1.2.1).
+        string maxAgeStr = ReadParameter(context, "max_age");
+        long? maxAge = int.TryParse(maxAgeStr, out int parsedMaxAge) && parsedMaxAge >= 0 ? parsedMaxAge : null;
+
+        // Read auth_time from the session cookie claim (set at login time).
+        long? sessionAuthTime = null;
+        string? authTimeClaim = user?.FindFirst("auth_time")?.Value;
+        if (!string.IsNullOrWhiteSpace(authTimeClaim) && long.TryParse(authTimeClaim, out long parsedAuthTime))
+        {
+            sessionAuthTime = parsedAuthTime;
+        }
+
+        // OIDC §3.1.2.1: if max_age is set and auth_time + max_age < now, force re-authentication.
+        bool authTooOld = maxAge.HasValue && sessionAuthTime.HasValue &&
+                          (DateTimeOffset.UtcNow.ToUnixTimeSeconds() - sessionAuthTime.Value) > maxAge.Value;
+
+        if (string.IsNullOrWhiteSpace(subjectId) || authTooOld)
         {
             // OIDC §3.1.2.6: prompt=none MUST return login_required if not authenticated.
             string prompt = ReadParameter(context, "prompt");
             if (string.Equals(prompt, "none", StringComparison.OrdinalIgnoreCase))
             {
-                await RedirectOrErrorAsync(context, redirectUri, state, "login_required", "The user is not authenticated.");
+                await RedirectOrErrorAsync(context, redirectUri, state, "login_required", "The user is not authenticated.", serverState.Issuer);
                 return;
             }
 
@@ -207,7 +225,7 @@ internal static class AuthorizationEndpoint
                 string prompt = ReadParameter(context, "prompt");
                 if (string.Equals(prompt, "none", StringComparison.OrdinalIgnoreCase))
                 {
-                    await RedirectOrErrorAsync(context, redirectUri, state, "consent_required", "User consent is required.");
+                    await RedirectOrErrorAsync(context, redirectUri, state, "consent_required", "User consent is required.", serverState.Issuer);
                     return;
                 }
 
@@ -219,17 +237,32 @@ internal static class AuthorizationEndpoint
             }
         }
 
+        // OIDC Core §3.1.2.1: auth_time MUST be in the ID token when max_age was used.
+        // Store the actual authentication time so the token endpoint can include it.
+        long? codeAuthTime = maxAge.HasValue ? sessionAuthTime : null;
+
+        // OIDC Core §3.1.2.1: acr_values — echo the first requested value back as the acr claim.
+        string acrValuesStr = ReadParameter(context, "acr_values");
+        string? acrValue = null;
+        if (!string.IsNullOrWhiteSpace(acrValuesStr))
+        {
+            // Use the first value from the space-separated list.
+            acrValue = acrValuesStr.Split(' ', StringSplitOptions.RemoveEmptyEntries)[0];
+        }
+
         var code = new AuthorizationCode
         {
             Code = CreateOpaqueHandle(),
             ClientId = client.ClientId,
             SubjectId = subjectId,
             RedirectUri = redirectUri,
-            CodeChallenge = codeChallenge,
+            CodeChallenge = string.IsNullOrWhiteSpace(codeChallenge) ? null : codeChallenge,
             GrantedScopes = grantedScopes,
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow.Add(client.AuthorizationCodeLifetime),
             Nonce = string.IsNullOrWhiteSpace(nonce) ? null : nonce,
+            AuthTime = codeAuthTime,
+            AcrValue = acrValue,
         };
 
         IAuthorizationCodeStore codeStore = context.RequestServices.GetRequiredService<IAuthorizationCodeStore>();
@@ -239,12 +272,14 @@ internal static class AuthorizationEndpoint
         {
             context.Response.ContentType = "text/html; charset=utf-8";
             context.Response.StatusCode = StatusCodes.Status200OK;
-            string html = BuildFormPostHtml(redirectUri, code.Code, state);
+            string html = BuildFormPostHtml(redirectUri, code.Code, state, serverState.Issuer);
             await context.Response.WriteAsync(html);
             return;
         }
 
-        string redirect = AppendQuery(redirectUri, "code", code.Code);
+        // RFC 9207 §2: include iss in authorization response to prevent mix-up attacks.
+        string redirect = AppendQuery(redirectUri, "iss", serverState.Issuer);
+        redirect = AppendQuery(redirect, "code", code.Code);
         if (!string.IsNullOrWhiteSpace(state))
         {
             redirect = AppendQuery(redirect, "state", state);
@@ -319,11 +354,18 @@ internal static class AuthorizationEndpoint
         return $"{uri}{separator}{Uri.EscapeDataString(name)}={Uri.EscapeDataString(value)}";
     }
 
-    private static async Task RedirectOrErrorAsync(HttpContext context, string redirectUri, string state, string error, string description)
+    private static async Task RedirectOrErrorAsync(HttpContext context, string redirectUri, string state, string error, string description, string? issuer = null)
     {
         if (!string.IsNullOrWhiteSpace(redirectUri))
         {
-            string redirect = AppendQuery(redirectUri, "error", error);
+            string redirect = redirectUri;
+            // RFC 9207 §2: include iss in error redirect responses too
+            if (!string.IsNullOrWhiteSpace(issuer))
+            {
+                redirect = AppendQuery(redirect, "iss", issuer);
+            }
+
+            redirect = AppendQuery(redirect, "error", error);
             redirect = AppendQuery(redirect, "error_description", description);
             if (!string.IsNullOrWhiteSpace(state))
             {
@@ -341,13 +383,17 @@ internal static class AuthorizationEndpoint
         await JsonResponseWriter.WriteAsync(context, new ErrorResponse(error, description), AuthJsonContext.Default.ErrorResponse);
     }
 
-    private static string BuildFormPostHtml(string redirectUri, string code, string state)
+    private static string BuildFormPostHtml(string redirectUri, string code, string state, string issuer)
     {
         var sb = new System.Text.StringBuilder(512);
         sb.Append("<!DOCTYPE html><html><head><title>Submit</title></head><body onload=\"document.forms[0].submit()\">");
         sb.Append("<form method=\"POST\" action=\"");
         sb.Append(System.Net.WebUtility.HtmlEncode(redirectUri));
         sb.Append("\">");
+        // RFC 9207 §2: include iss in form_post response
+        sb.Append("<input type=\"hidden\" name=\"iss\" value=\"");
+        sb.Append(System.Net.WebUtility.HtmlEncode(issuer));
+        sb.Append("\"/>");
         sb.Append("<input type=\"hidden\" name=\"code\" value=\"");
         sb.Append(System.Net.WebUtility.HtmlEncode(code));
         sb.Append("\"/>");

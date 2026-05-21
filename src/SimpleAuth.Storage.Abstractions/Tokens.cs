@@ -18,8 +18,8 @@ public sealed class AuthorizationCode
     /// <summary>Redirect URI used in the original authorization request.</summary>
     public required string RedirectUri { get; init; }
 
-    /// <summary>SHA-256 PKCE code challenge (RFC 7636 §4.2). Never <c>null</c> — PKCE is mandatory.</summary>
-    public required string CodeChallenge { get; init; }
+    /// <summary>SHA-256 PKCE code challenge (RFC 7636 §4.2). <c>null</c> when client does not require PKCE.</summary>
+    public string? CodeChallenge { get; init; }
 
     /// <summary>Scopes granted at the authorization endpoint.</summary>
     public required IReadOnlyList<string> GrantedScopes { get; init; }
@@ -32,6 +32,19 @@ public sealed class AuthorizationCode
 
     /// <summary>Nonce from the authorization request, included in the ID token.</summary>
     public string? Nonce { get; init; }
+
+    /// <summary>
+    /// Unix timestamp (seconds) of when the End-User was authenticated.
+    /// Populated when the authorization request included <c>max_age</c>.
+    /// OIDC Core §3.1.2.1: <c>auth_time</c> MUST appear in the ID token when <c>max_age</c> was used.
+    /// </summary>
+    public long? AuthTime { get; init; }
+
+    /// <summary>
+    /// Authentication Context Class Reference value to include in the ID token.
+    /// Set from the first value of the <c>acr_values</c> request parameter (OIDC Core §3.1.2.1).
+    /// </summary>
+    public string? AcrValue { get; init; }
 
     /// <summary>Session identifier from the user's authentication session.</summary>
     public string? SessionId { get; init; }
@@ -169,11 +182,11 @@ public sealed class ParEntry
     /// <summary>Space-separated scope string from the PAR request.</summary>
     public required string Scope { get; init; }
 
-    /// <summary>PKCE code challenge (S256 is the only supported method).</summary>
-    public required string CodeChallenge { get; init; }
+    /// <summary>PKCE code challenge (S256 is the only supported method). Null when PKCE is not used.</summary>
+    public string? CodeChallenge { get; init; }
 
-    /// <summary>PKCE code challenge method — always "S256".</summary>
-    public required string CodeChallengeMethod { get; init; }
+    /// <summary>PKCE code challenge method — "S256" or null when PKCE is not used.</summary>
+    public string? CodeChallengeMethod { get; init; }
 
     /// <summary>response_type from the PAR request. Should always be "code".</summary>
     public required string ResponseType { get; init; }

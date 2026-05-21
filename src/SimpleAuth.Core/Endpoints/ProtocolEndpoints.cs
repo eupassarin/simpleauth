@@ -1,10 +1,12 @@
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using SimpleAuth.Configuration;
 using SimpleAuth.Crypto;
 using SimpleAuth.Serialization;
 namespace SimpleAuth.Endpoints;
@@ -429,43 +431,105 @@ internal static class UserInfoEndpoint
                 continue;
             }
 
-            response[claim.Type] = claim.Value;
+            response[claim.Type] = CoerceClaimValue(claim);
         }
 
         foreach (Claim claim in enrichmentContext.Claims)
         {
             if (!IsProtocolClaim(claim.Type))
             {
-                response[claim.Type] = claim.Value;
+                response[claim.Type] = CoerceClaimValue(claim);
             }
         }
 
         await JsonResponseWriter.WriteAsync(context, response, AuthJsonContext.Default.UserInfoResponse);
     }
 
+    // Claims that must be serialized as JSON numbers, not strings (OIDC Core §5.1)
+    private static readonly HashSet<string> NumericClaims = new(StringComparer.Ordinal)
+    {
+        "updated_at", "auth_time", "exp", "iat", "nbf",
+    };
+
+    // Claims that contain a JSON object value (OIDC Core §5.1)
+    private static readonly HashSet<string> JsonObjectClaims = new(StringComparer.Ordinal)
+    {
+        "address",
+    };
+
+    private static object? CoerceClaimValue(Claim claim)
+    {
+        if (NumericClaims.Contains(claim.Type) && long.TryParse(claim.Value, out long numericValue))
+        {
+            return numericValue;
+        }
+
+        if (string.Equals(claim.ValueType, ClaimValueTypes.Boolean, StringComparison.Ordinal) &&
+            bool.TryParse(claim.Value, out bool boolValue))
+        {
+            return boolValue;
+        }
+
+        // address and similar claims are JSON objects — parse into Dictionary<string, string?> for AOT-safe serialization
+        if (JsonObjectClaims.Contains(claim.Type))
+        {
+            try
+            {
+                using JsonDocument doc = JsonDocument.Parse(claim.Value);
+                var dict = new Dictionary<string, string?>(StringComparer.Ordinal);
+                foreach (JsonProperty prop in doc.RootElement.EnumerateObject())
+                {
+                    dict[prop.Name] = prop.Value.ValueKind == JsonValueKind.String
+                        ? prop.Value.GetString()
+                        : prop.Value.ToString();
+                }
+
+                return dict;
+            }
+            catch (JsonException)
+            {
+                // fall through to return as string
+            }
+        }
+
+        return claim.Value;
+    }
+
     /// <summary>
     /// Reads the raw access token string from the request, accepting both <c>Bearer</c> and <c>DPoP</c> schemes.
+    /// Also accepts <c>access_token</c> in POST body per RFC 6750 §2.2 (optional form parameter method).
     /// Outputs the scheme used so callers can enforce DPoP scheme requirement (RFC 9449 §7.1).
     /// </summary>
     private static string? GetPresentedToken(HttpContext context, out string scheme)
     {
         scheme = string.Empty;
         string? auth = context.Request.Headers.Authorization.ToString();
-        if (string.IsNullOrWhiteSpace(auth))
+
+        if (!string.IsNullOrWhiteSpace(auth))
         {
-            return null;
+            if (auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                scheme = "Bearer";
+                return auth[7..].Trim();
+            }
+
+            if (auth.StartsWith("DPoP ", StringComparison.OrdinalIgnoreCase))
+            {
+                scheme = "DPoP";
+                return auth[5..].Trim();
+            }
         }
 
-        if (auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        // RFC 6750 §2.2 — access token in POST body (optional, for compatibility)
+        if (context.Request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase) &&
+            context.Request.HasFormContentType)
         {
-            scheme = "Bearer";
-            return auth[7..].Trim();
-        }
-
-        if (auth.StartsWith("DPoP ", StringComparison.OrdinalIgnoreCase))
-        {
-            scheme = "DPoP";
-            return auth[5..].Trim();
+            string? bodyToken = context.Request.Form["access_token"].ToString();
+            if (!string.IsNullOrWhiteSpace(bodyToken))
+            {
+                scheme = "Bearer";
+                return bodyToken;
+            }
         }
 
         return null;
@@ -654,6 +718,18 @@ internal static class EndSessionEndpoint
 
             await refreshStore.RevokeAllAsync(subjectId, clientId, context.RequestAborted);
             await tokenStore.RevokeAllAsync(subjectId, clientId, context.RequestAborted);
+        }
+
+        // Sign out the user — clear the session cookie so prompt=none works correctly.
+        // Guard against minimal test environments where the cookie handler may not be registered.
+        try
+        {
+            SimpleAuthServerConfiguration cfg = context.RequestServices.GetRequiredService<SimpleAuthServerConfiguration>();
+            await context.SignOutAsync(cfg.Interaction.CookieScheme);
+        }
+        catch (InvalidOperationException)
+        {
+            // No cookie authentication handler registered — skip sign-out (e.g., test environments).
         }
 
         // OIDC RP-Initiated Logout §2.1: post_logout_redirect_uri MUST be validated

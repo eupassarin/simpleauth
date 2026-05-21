@@ -54,11 +54,14 @@ internal static class InteractionEndpoints
         }
 
         // The built-in login accepts any username/password for development.
+        long authTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         var claims = new List<Claim>
         {
             new("sub", username),
             new(ClaimTypes.NameIdentifier, username),
             new("name", username),
+            // OIDC Core §2: auth_time = when the End-User was authenticated.
+            new("auth_time", authTime.ToString(System.Globalization.CultureInfo.InvariantCulture), ClaimValueTypes.Integer64),
         };
 
         var identity = new ClaimsIdentity(claims, cfg.Interaction.CookieScheme);

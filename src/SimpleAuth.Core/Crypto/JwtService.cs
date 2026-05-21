@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
@@ -94,7 +95,21 @@ internal sealed class JwtService
         {
             foreach (Claim claim in identityClaims)
             {
-                claims[claim.Type] = claim.Value;
+                // Skip empty string claims — conformance rejects "string with content" violations
+                if (string.IsNullOrEmpty(claim.Value))
+                {
+                    continue;
+                }
+
+                // OIDC Core §5.4: email/phone are UserInfo-only; including them in the
+                // ID token without an explicit 'claims' request confuses RPs that treat
+                // the ID token as a pure authentication event assertion.
+                if (UserInfoOnlyClaims.Contains(claim.Type))
+                {
+                    continue;
+                }
+
+                claims[claim.Type] = CoerceClaimValue(claim);
             }
         }
 
@@ -192,11 +207,75 @@ internal sealed class JwtService
         {
             foreach (Claim claim in additionalClaims)
             {
-                claims[claim.Type] = claim.Value;
+                claims[claim.Type] = CoerceClaimValue(claim);
             }
         }
 
         return claims;
+    }
+
+    // Claims that must be serialized as JSON numbers (OIDC Core §5.1)
+    private static readonly HashSet<string> NumericClaims = new(StringComparer.Ordinal)
+    {
+        "updated_at", "auth_time",
+    };
+
+    // Claims whose value is a JSON object string that must be deserialized inline (OIDC Core §5.1)
+    private static readonly HashSet<string> JsonObjectClaims = new(StringComparer.Ordinal)
+    {
+        "address",
+    };
+
+    // Claims that belong in the UserInfo response only — not the ID token.
+    // OIDC Core §5.4: scope=email grants access to email in UserInfo; including it
+    // in the ID token without an explicit `claims` request is non-normative and
+    // confuses relying parties that use the ID token as an authentication event proof.
+    // The OIDF conformance suite raises EnsureIdTokenDoesNotContainEmailForScopeEmail
+    // as a warning when these claims appear in the ID token.
+    private static readonly HashSet<string> UserInfoOnlyClaims = new(StringComparer.Ordinal)
+    {
+        "email",
+        "email_verified",
+        "phone_number",
+        "phone_number_verified",
+    };
+
+    private static object CoerceClaimValue(Claim claim)
+    {
+        if (NumericClaims.Contains(claim.Type) && long.TryParse(claim.Value, out long numericValue))
+        {
+            return numericValue;
+        }
+
+        if (string.Equals(claim.ValueType, ClaimValueTypes.Boolean, StringComparison.Ordinal) &&
+            bool.TryParse(claim.Value, out bool boolValue))
+        {
+            return boolValue;
+        }
+
+        // address must be a nested JSON object in the JWT payload (OIDC Core §5.1.1)
+        if (JsonObjectClaims.Contains(claim.Type))
+        {
+            try
+            {
+                using JsonDocument doc = JsonDocument.Parse(claim.Value);
+                var dict = new Dictionary<string, string?>(StringComparer.Ordinal);
+                foreach (JsonProperty prop in doc.RootElement.EnumerateObject())
+                {
+                    dict[prop.Name] = prop.Value.ValueKind == JsonValueKind.String
+                        ? prop.Value.GetString()
+                        : prop.Value.ToString();
+                }
+
+                return dict;
+            }
+            catch (JsonException)
+            {
+                // fall through to return as string
+            }
+        }
+
+        return claim.Value;
     }
 }
 

@@ -40,6 +40,12 @@
         <member name="P:SimpleAuth.EntityFramework.Entities.AuthorizationCodeEntity.GrantedScopes">
             <summary>JSON: string[]</summary>
         </member>
+        <member name="P:SimpleAuth.EntityFramework.Entities.AuthorizationCodeEntity.AuthTime">
+            <summary>Unix timestamp of when the End-User authenticated. Set when max_age was used.</summary>
+        </member>
+        <member name="P:SimpleAuth.EntityFramework.Entities.AuthorizationCodeEntity.AcrValue">
+            <summary>ACR value requested via acr_values; echoed back in the ID token acr claim.</summary>
+        </member>
         <member name="T:SimpleAuth.EntityFramework.Entities.RefreshTokenEntity">
             <summary>EF Core entity for a refresh token.</summary>
         </member>

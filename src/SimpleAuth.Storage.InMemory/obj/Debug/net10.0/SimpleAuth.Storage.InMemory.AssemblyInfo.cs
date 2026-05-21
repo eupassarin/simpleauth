@@ -17,7 +17,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCopyrightAttribute("Copyright © SimpleAuth Contributors")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("In-memory store implementations for SimpleAuth — development and testing.")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1812a8ae57aa51ba864d18b6548344caf4b8a2ae")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f3b8e54f18468d6dd1d5635b2e9bb2788624a713")]
 [assembly: System.Reflection.AssemblyProductAttribute("SimpleAuth")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SimpleAuth.Storage.InMemory")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

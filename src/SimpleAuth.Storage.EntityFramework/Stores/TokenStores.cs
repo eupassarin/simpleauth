@@ -33,6 +33,8 @@ internal sealed class EfAuthorizationCodeStore : IAuthorizationCodeStore
             ExpiresAt = code.ExpiresAt,
             Nonce = code.Nonce,
             SessionId = code.SessionId,
+            AuthTime = code.AuthTime,
+            AcrValue = code.AcrValue,
             IsConsumed = false,
         };
 
@@ -84,6 +86,8 @@ internal sealed class EfAuthorizationCodeStore : IAuthorizationCodeStore
         ExpiresAt = e.ExpiresAt,
         Nonce = e.Nonce,
         SessionId = e.SessionId,
+        AuthTime = e.AuthTime,
+        AcrValue = e.AcrValue,
         IsConsumed = e.IsConsumed,
     };
 }

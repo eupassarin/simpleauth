@@ -1,11 +1,11 @@
 /Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.Abstractions/obj/Debug/net10.0/SimpleAuth.Storage.Abstractions.GeneratedMSBuildEditorConfig.editorconfig
 /Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.Abstractions/obj/Debug/net10.0/SimpleAuth.Storage.Abstractions.AssemblyInfoInputs.cache
-/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.Abstractions/obj/Debug/net10.0/SimpleAuth.Storage.Abstractions.AssemblyInfo.cs
-/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.Abstractions/obj/Debug/net10.0/SimpleAuth.Storage.Abstractions.csproj.CoreCompileInputs.cache
-/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.Abstractions/obj/Debug/net10.0/SimpleAuth.Storage.Abstractions.xml
 /Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.Abstractions/bin/Debug/net10.0/SimpleAuth.Storage.Abstractions.deps.json
 /Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.Abstractions/bin/Debug/net10.0/SimpleAuth.Storage.Abstractions.dll
 /Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.Abstractions/bin/Debug/net10.0/SimpleAuth.Storage.Abstractions.xml
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.Abstractions/obj/Debug/net10.0/SimpleAuth.Storage.Abstractions.AssemblyInfo.cs
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.Abstractions/obj/Debug/net10.0/SimpleAuth.Storage.Abstractions.csproj.CoreCompileInputs.cache
 /Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.Abstractions/obj/Debug/net10.0/SimpleAuth.Storage.Abstractions.dll
 /Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.Abstractions/obj/Debug/net10.0/refint/SimpleAuth.Storage.Abstractions.dll
+/Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.Abstractions/obj/Debug/net10.0/SimpleAuth.Storage.Abstractions.xml
 /Users/andrealmeida/simpleauth/src/SimpleAuth.Storage.Abstractions/obj/Debug/net10.0/ref/SimpleAuth.Storage.Abstractions.dll

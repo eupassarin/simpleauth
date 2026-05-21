@@ -14,6 +14,7 @@ namespace SimpleAuth.Serialization;
 [JsonSerializable(typeof(UserInfoResponse))]
 [JsonSerializable(typeof(IntrospectionResponse))]
 [JsonSerializable(typeof(ParResponse))]
+[JsonSerializable(typeof(Dictionary<string, string?>))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,

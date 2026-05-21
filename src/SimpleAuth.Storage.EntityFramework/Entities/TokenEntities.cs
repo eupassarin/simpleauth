@@ -20,7 +20,7 @@ internal sealed class AuthorizationCodeEntity
     public required string RedirectUri { get; set; }
 
     [MaxLength(256)]
-    public required string CodeChallenge { get; set; }
+    public string? CodeChallenge { get; set; }
 
     /// <summary>JSON: string[]</summary>
     public required string GrantedScopes { get; set; }
@@ -30,6 +30,13 @@ internal sealed class AuthorizationCodeEntity
 
     [MaxLength(500)]
     public string? Nonce { get; set; }
+
+    /// <summary>Unix timestamp of when the End-User authenticated. Set when max_age was used.</summary>
+    public long? AuthTime { get; set; }
+
+    /// <summary>ACR value requested via acr_values; echoed back in the ID token acr claim.</summary>
+    [MaxLength(256)]
+    public string? AcrValue { get; set; }
 
     [MaxLength(200)]
     public string? SessionId { get; set; }
@@ -112,10 +119,10 @@ internal sealed class ParEntryEntity
     public required string Scope { get; set; }
 
     [MaxLength(256)]
-    public required string CodeChallenge { get; set; }
+    public string? CodeChallenge { get; set; }
 
     [MaxLength(10)]
-    public required string CodeChallengeMethod { get; set; }
+    public string? CodeChallengeMethod { get; set; }
 
     [MaxLength(10)]
     public required string ResponseType { get; set; }

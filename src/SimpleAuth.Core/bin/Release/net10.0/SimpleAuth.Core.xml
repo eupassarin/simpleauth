@@ -27,6 +27,9 @@
         <member name="P:SimpleAuth.Configuration.SimpleAuthServerConfiguration.Par">
             <summary>Pushed Authorization Request (RFC 9126) configuration.</summary>
         </member>
+        <member name="P:SimpleAuth.Configuration.SimpleAuthServerConfiguration.Interaction">
+            <summary>User interaction (login/consent) configuration.</summary>
+        </member>
         <member name="M:SimpleAuth.Configuration.SimpleAuthServerConfiguration.Validate">
             <summary>Validates the configuration before the server starts.</summary>
         </member>
@@ -163,6 +166,31 @@
             RFC 9126 §2.2 recommends between 5 s and 600 s.
             Defaults to 90 seconds.
             </summary>
+        </member>
+        <member name="T:SimpleAuth.Configuration.InteractionConfiguration">
+            <summary>Configuration for user interaction pages (login, consent, error).</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InteractionConfiguration.LoginPath">
+            <summary>Path to the login page. Default: "/account/login".</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InteractionConfiguration.ConsentPath">
+            <summary>Path to the consent page. Default: "/account/consent".</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InteractionConfiguration.ErrorPath">
+            <summary>Path to the error page. Default: "/account/error".</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InteractionConfiguration.ReturnUrlParameter">
+            <summary>Name of the query parameter used to pass the return URL. Default: "returnUrl".</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InteractionConfiguration.EnableBuiltInPages">
+            <summary>
+            Whether to enable the built-in minimal login/consent UI pages.
+            Set to false if you provide your own pages.
+            Default: true.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InteractionConfiguration.CookieScheme">
+            <summary>Cookie authentication scheme name used by SimpleAuth. Default: "SimpleAuth.Cookie".</summary>
         </member>
         <member name="T:SimpleAuth.Crypto.DPopValidationResult">
             <summary>The outcome of a DPoP proof validation attempt.</summary>
@@ -466,6 +494,18 @@
         <member name="M:SimpleAuth.Endpoints.AuthorizationEndpoint.HandleAsync(Microsoft.AspNetCore.Http.HttpContext)">
             <summary>Handles browser-based authorization requests.</summary>
         </member>
+        <member name="T:SimpleAuth.Endpoints.InteractionEndpoints">
+            <summary>Built-in minimal login and consent UI pages for SimpleAuth.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.InteractionEndpoints.HandleLoginAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Renders the login form (GET) or processes login (POST).</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.InteractionEndpoints.HandleConsentAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Renders the consent form (GET) or processes consent (POST).</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.InteractionEndpoints.HandleLogoutAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Handles logout.</summary>
+        </member>
         <member name="T:SimpleAuth.Endpoints.JsonResponseWriter">
             <summary>Writes JSON responses using source-generated metadata.</summary>
         </member>
@@ -538,9 +578,11 @@
         <member name="M:SimpleAuth.Endpoints.UserInfoEndpoint.HandleAsync(Microsoft.AspNetCore.Http.HttpContext)">
             <summary>Returns user claims based on the bearer token.</summary>
         </member>
-        <member name="M:SimpleAuth.Endpoints.UserInfoEndpoint.GetPresentedToken(Microsoft.AspNetCore.Http.HttpContext)">
+        <member name="M:SimpleAuth.Endpoints.UserInfoEndpoint.GetPresentedToken(Microsoft.AspNetCore.Http.HttpContext,System.String@)">
             <summary>
             Reads the raw access token string from the request, accepting both <c>Bearer</c> and <c>DPoP</c> schemes.
+            Also accepts <c>access_token</c> in POST body per RFC 6750 §2.2 (optional form parameter method).
+            Outputs the scheme used so callers can enforce DPoP scheme requirement (RFC 9449 §7.1).
             </summary>
         </member>
         <member name="T:SimpleAuth.Endpoints.IntrospectionEndpoint">
@@ -646,6 +688,9 @@
         </member>
         <member name="P:SimpleAuth.DiscoveryDocument.ResponseTypesSupported">
             <summary>Supported response types.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.ResponseModesSupported">
+            <summary>Supported response modes.</summary>
         </member>
         <member name="P:SimpleAuth.DiscoveryDocument.GrantTypesSupported">
             <summary>Supported grant types.</summary>
@@ -780,6 +825,11 @@
             </summary>
         </member>
         <member name="P:SimpleAuth.Serialization.AuthJsonContext.UserInfoResponse">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.DictionaryStringString">
             <summary>
             Defines the source generated JSON serialization contract metadata for a given type.
             </summary>

@@ -303,6 +303,8 @@ public sealed class InMemoryAuthorizationCodeStore : IAuthorizationCodeStore
                 ExpiresAt = code.ExpiresAt,
                 Nonce = code.Nonce,
                 SessionId = code.SessionId,
+                AuthTime = code.AuthTime,
+                AcrValue = code.AcrValue,
                 IsConsumed = true,
             });
         }

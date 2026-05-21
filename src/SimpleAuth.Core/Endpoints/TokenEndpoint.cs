@@ -14,6 +14,10 @@ internal static class TokenEndpoint
     /// <summary>Processes client_credentials and authorization_code token requests.</summary>
     internal static async Task HandleAsync(HttpContext context)
     {
+        // RFC 6749 §5.1: token endpoint responses MUST include Cache-Control and Pragma headers.
+        context.Response.Headers.CacheControl = "no-store";
+        context.Response.Headers.Pragma = "no-cache";
+
         if (!HttpMethods.IsPost(context.Request.Method))
         {
             await JsonErrorAsync(context, StatusCodes.Status405MethodNotAllowed, "invalid_request", "POST is required.");
@@ -163,9 +167,16 @@ internal static class TokenEndpoint
         string redirectUri = form["redirect_uri"].ToString();
         string codeVerifier = form["code_verifier"].ToString();
 
-        if (string.IsNullOrWhiteSpace(codeHandle) || string.IsNullOrWhiteSpace(redirectUri) || string.IsNullOrWhiteSpace(codeVerifier))
+        if (string.IsNullOrWhiteSpace(codeHandle) || string.IsNullOrWhiteSpace(redirectUri))
         {
-            await JsonErrorAsync(context, StatusCodes.Status400BadRequest, "invalid_request", "code, redirect_uri and code_verifier are required.");
+            await JsonErrorAsync(context, StatusCodes.Status400BadRequest, "invalid_request", "code and redirect_uri are required.");
+            return;
+        }
+
+        // When PKCE is required for this client, code_verifier is also required
+        if (client.RequirePkce && string.IsNullOrWhiteSpace(codeVerifier))
+        {
+            await JsonErrorAsync(context, StatusCodes.Status400BadRequest, "invalid_request", "code_verifier is required for this client.");
             return;
         }
 
@@ -183,7 +194,10 @@ internal static class TokenEndpoint
             return;
         }
 
-        if (!PkceValidator.Validate(codeVerifier, authorizationCode.CodeChallenge))
+        // If PKCE was used during authorization (code_challenge was stored), validate the verifier.
+        // If no code_challenge was stored (client opted out of PKCE), skip validation.
+        if (!string.IsNullOrWhiteSpace(authorizationCode.CodeChallenge) &&
+            !PkceValidator.Validate(codeVerifier, authorizationCode.CodeChallenge))
         {
             await JsonErrorAsync(context, StatusCodes.Status400BadRequest, "invalid_grant", "PKCE validation failed.");
             return;
@@ -203,6 +217,27 @@ internal static class TokenEndpoint
         {
             IReadOnlyList<Claim> enrichedClaims = await EnrichIdentityClaimsAsync(
                 context, authorizationCode.SubjectId, client.ClientId, authorizationCode.GrantedScopes);
+
+            // OIDC Core §3.1.2.1: auth_time MUST appear in the ID token when max_age was used.
+            // OIDC Core §3.1.2.1: acr SHOULD appear when acr_values was requested.
+            var extraClaims = new List<Claim>();
+            if (authorizationCode.AuthTime.HasValue &&
+                !enrichedClaims.Any(c => string.Equals(c.Type, "auth_time", StringComparison.Ordinal)))
+            {
+                extraClaims.Add(new("auth_time", authorizationCode.AuthTime.Value.ToString(System.Globalization.CultureInfo.InvariantCulture), ClaimValueTypes.Integer64));
+            }
+
+            if (!string.IsNullOrWhiteSpace(authorizationCode.AcrValue) &&
+                !enrichedClaims.Any(c => string.Equals(c.Type, "acr", StringComparison.Ordinal)))
+            {
+                extraClaims.Add(new("acr", authorizationCode.AcrValue));
+            }
+
+            if (extraClaims.Count > 0)
+            {
+                extraClaims.AddRange(enrichedClaims);
+                enrichedClaims = extraClaims;
+            }
 
             idToken = jwt.IssueIdToken(
                 authorizationCode.SubjectId,
