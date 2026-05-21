@@ -1,0 +1,919 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SimpleAuth.Core</name>
+    </assembly>
+    <members>
+        <member name="T:SimpleAuth.Configuration.SimpleAuthServerConfiguration">
+            <summary>
+            Top-level configuration object passed to <c>AddSimpleAuth</c>.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.SimpleAuthServerConfiguration.Issuer">
+            <summary>Issuer URL for tokens and discovery.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.SimpleAuthServerConfiguration.Store">
+            <summary>Store-related configuration.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.SimpleAuthServerConfiguration.Keys">
+            <summary>Signing-key configuration.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.SimpleAuthServerConfiguration.Discovery">
+            <summary>Discovery document configuration.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.SimpleAuthServerConfiguration.RateLimit">
+            <summary>Rate-limit configuration for the protocol endpoints.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.SimpleAuthServerConfiguration.Par">
+            <summary>Pushed Authorization Request (RFC 9126) configuration.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.SimpleAuthServerConfiguration.Interaction">
+            <summary>User interaction (login/consent) configuration.</summary>
+        </member>
+        <member name="M:SimpleAuth.Configuration.SimpleAuthServerConfiguration.Validate">
+            <summary>Validates the configuration before the server starts.</summary>
+        </member>
+        <member name="T:SimpleAuth.Configuration.StoreConfiguration">
+            <summary>Configuration for stores.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.StoreConfiguration.InMemory">
+            <summary>In-memory seed data used for development and tests.</summary>
+        </member>
+        <member name="M:SimpleAuth.Configuration.StoreConfiguration.UseInMemory(System.Action{SimpleAuth.Configuration.InMemoryStoreConfiguration})">
+            <summary>Configures the server to use in-memory stores.</summary>
+        </member>
+        <member name="T:SimpleAuth.Configuration.InMemoryStoreConfiguration">
+            <summary>Seed data for the in-memory store package.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InMemoryStoreConfiguration.Clients">
+            <summary>Seed clients.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InMemoryStoreConfiguration.Scopes">
+            <summary>Seed scopes.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InMemoryStoreConfiguration.IdentityScopes">
+            <summary>Seed identity scopes.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InMemoryStoreConfiguration.Resources">
+            <summary>Seed protected resources.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InMemoryStoreConfiguration.AuthorizationCodes">
+            <summary>Seed authorization codes.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InMemoryStoreConfiguration.RefreshTokens">
+            <summary>Seed refresh tokens.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InMemoryStoreConfiguration.IssuedTokens">
+            <summary>Seed issued tokens.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InMemoryStoreConfiguration.SigningKeys">
+            <summary>Seed signing keys.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InMemoryStoreConfiguration.Consents">
+            <summary>Seed consents.</summary>
+        </member>
+        <member name="T:SimpleAuth.Configuration.KeyConfiguration">
+            <summary>Configuration for the signing key material.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.KeyConfiguration.EcKey">
+            <summary>Configured EC development key, if any.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.KeyConfiguration.RsaKey">
+            <summary>Configured RSA development key, if any.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.KeyConfiguration.KeyId">
+            <summary>Configured key identifier.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.KeyConfiguration.Algorithm">
+            <summary>Configured algorithm name.</summary>
+        </member>
+        <member name="M:SimpleAuth.Configuration.KeyConfiguration.UseDevelopmentKey">
+            <summary>Configures a throwaway EC P-256 development key.</summary>
+        </member>
+        <member name="M:SimpleAuth.Configuration.KeyConfiguration.UseDevelopmentRsaKey">
+            <summary>Configures a throwaway RSA-2048 development key.</summary>
+        </member>
+        <member name="M:SimpleAuth.Configuration.KeyConfiguration.BuildSigningKeyHolder">
+            <summary>Creates the active signing key holder.</summary>
+        </member>
+        <member name="M:SimpleAuth.Configuration.KeyConfiguration.EnsureConfigured">
+            <summary>Ensures some signing key has been configured.</summary>
+        </member>
+        <member name="T:SimpleAuth.Configuration.DiscoveryConfiguration">
+            <summary>Discovery-document behavior toggles.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.DiscoveryConfiguration.IncludeAuthorizationEndpoint">
+            <summary>Whether the authorize endpoint should be advertised.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.DiscoveryConfiguration.IncludeUserInfoEndpoint">
+            <summary>Whether to advertise the userinfo endpoint.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.DiscoveryConfiguration.IncludeIntrospectionEndpoint">
+            <summary>Whether to advertise the introspection endpoint.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.DiscoveryConfiguration.IncludeRevocationEndpoint">
+            <summary>Whether to advertise the revocation endpoint.</summary>
+        </member>
+        <member name="T:SimpleAuth.Configuration.RateLimitConfiguration">
+            <summary>Rate-limit settings for the protocol endpoints.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.RateLimitConfiguration.Enabled">
+            <summary>
+            Whether rate limiting is enabled. Defaults to <see langword="true"/>.
+            Set to <see langword="false"/> to disable entirely (e.g., in tests).
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.RateLimitConfiguration.TokenPermitLimit">
+            <summary>
+            Maximum token-endpoint requests allowed per <see cref="P:SimpleAuth.Configuration.RateLimitConfiguration.TokenWindow"/> per IP address.
+            Defaults to 20.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.RateLimitConfiguration.TokenWindow">
+            <summary>Sliding window for the token-endpoint rate limit. Defaults to 1 minute.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.RateLimitConfiguration.AuthorizePermitLimit">
+            <summary>
+            Maximum authorize-endpoint requests allowed per <see cref="P:SimpleAuth.Configuration.RateLimitConfiguration.AuthorizeWindow"/> per IP address.
+            Defaults to 30.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.RateLimitConfiguration.AuthorizeWindow">
+            <summary>Sliding window for the authorize-endpoint rate limit. Defaults to 1 minute.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.RateLimitConfiguration.RejectionStatusCode">
+            <summary>HTTP status code returned when the limit is exceeded. Defaults to 429.</summary>
+        </member>
+        <member name="T:SimpleAuth.Configuration.PushedAuthorizationConfiguration">
+            <summary>Pushed Authorization Request (RFC 9126) settings.</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.PushedAuthorizationConfiguration.Enabled">
+            <summary>
+            Whether the PAR endpoint (<c>POST /connect/par</c>) is enabled.
+            Defaults to <see langword="true"/>.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.PushedAuthorizationConfiguration.Required">
+            <summary>
+            When <see langword="true"/>, all authorize requests MUST use PAR.
+            Direct calls to <c>/connect/authorize</c> without a <c>request_uri</c> are rejected.
+            Defaults to <see langword="false"/>.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.PushedAuthorizationConfiguration.RequestLifetime">
+            <summary>
+            How long a PAR entry lives before the authorize endpoint must consume it.
+            RFC 9126 §2.2 recommends between 5 s and 600 s.
+            Defaults to 90 seconds.
+            </summary>
+        </member>
+        <member name="T:SimpleAuth.Configuration.InteractionConfiguration">
+            <summary>Configuration for user interaction pages (login, consent, error).</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InteractionConfiguration.LoginPath">
+            <summary>Path to the login page. Default: "/account/login".</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InteractionConfiguration.ConsentPath">
+            <summary>Path to the consent page. Default: "/account/consent".</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InteractionConfiguration.ErrorPath">
+            <summary>Path to the error page. Default: "/account/error".</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InteractionConfiguration.ReturnUrlParameter">
+            <summary>Name of the query parameter used to pass the return URL. Default: "returnUrl".</summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InteractionConfiguration.EnableBuiltInPages">
+            <summary>
+            Whether to enable the built-in minimal login/consent UI pages.
+            Set to false if you provide your own pages.
+            Default: true.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Configuration.InteractionConfiguration.CookieScheme">
+            <summary>Cookie authentication scheme name used by SimpleAuth. Default: "SimpleAuth.Cookie".</summary>
+        </member>
+        <member name="T:SimpleAuth.Crypto.DPopValidationResult">
+            <summary>The outcome of a DPoP proof validation attempt.</summary>
+        </member>
+        <member name="P:SimpleAuth.Crypto.DPopValidationResult.JktThumbprint">
+            <summary>JWK thumbprint of the DPoP public key. Non-null when <see cref="P:SimpleAuth.Crypto.DPopValidationResult.IsValid"/> is true.</summary>
+        </member>
+        <member name="P:SimpleAuth.Crypto.DPopValidationResult.Error">
+            <summary>Human-readable failure reason. Non-null when <see cref="P:SimpleAuth.Crypto.DPopValidationResult.IsValid"/> is false.</summary>
+        </member>
+        <member name="T:SimpleAuth.Crypto.DPopProofValidator">
+            <summary>
+            Validates DPoP proof JWTs per RFC 9449 §4.3.
+            Validates signature, header, payload claims, and replay protection via <see cref="T:SimpleAuth.IJtiStore"/>.
+            </summary>
+        </member>
+        <member name="F:SimpleAuth.Crypto.DPopProofValidator.MaxIatSkewSeconds">
+            <summary>Maximum age of a DPoP proof's <c>iat</c> claim (seconds).</summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.DPopProofValidator.ValidateAsync(System.String,System.String,System.String,SimpleAuth.IJtiStore,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Validates a DPoP proof JWT presented at the token endpoint or a resource endpoint.
+            </summary>
+            <param name="dpopProof">Raw DPoP JWT string from the <c>DPoP</c> header.</param>
+            <param name="expectedHtm">Expected HTTP method (e.g., <c>POST</c>).</param>
+            <param name="expectedHtu">Expected HTTP URI (scheme + authority + path, no query).</param>
+            <param name="jtiStore">Store used to detect and prevent proof replay.</param>
+            <param name="accessToken">
+            If non-null, the validator also verifies the <c>ath</c> claim equals
+            base64url(SHA-256(<paramref name="accessToken"/>)).
+            Required for DPoP-bound resource access (RFC 9449 §7.1).
+            </param>
+            <param name="cancellationToken">Cancellation token.</param>
+        </member>
+        <member name="M:SimpleAuth.Crypto.DPopProofValidator.ComputeThumbprint(System.Text.Json.JsonElement)">
+            <summary>Computes the JWK thumbprint (RFC 7638) for a public key JSON element.</summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.DPopProofValidator.ContainsPrivateKeyMaterial(System.Text.Json.JsonElement)">
+            <summary>Checks if a JWK JSON element contains private key parameters (d, p, q, dp, dq, qi).</summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.DPopProofValidator.BuildSecurityKeyAndThumbprint(System.Text.Json.JsonElement)">
+            <summary>Builds a <see cref="T:Microsoft.IdentityModel.Tokens.SecurityKey"/> and JWK thumbprint from a jwk JSON element.</summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.DPopProofValidator.ComputeEcThumbprint(System.String,System.String,System.String)">
+            <summary>
+            Computes RFC 7638 JWK thumbprint for an EC key.
+            Canonical form: {"crv":"P-256","kty":"EC","x":"...","y":"..."} (alphabetical key order).
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.DPopProofValidator.ComputeRsaThumbprint(System.String,System.String)">
+            <summary>
+            Computes RFC 7638 JWK thumbprint for an RSA key.
+            Canonical form: {"e":"...","kty":"RSA","n":"..."} (alphabetical key order).
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.DPopProofValidator.ComputeAth(System.String)">
+            <summary>
+            Computes <c>ath</c> claim value: base64url(SHA-256(ascii(access_token))).
+            RFC 9449 §4.2.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.DPopProofValidator.NormalizeUri(System.String)">
+            <summary>Strips query string and fragment from a URI for htu comparison.</summary>
+        </member>
+        <member name="T:SimpleAuth.Crypto.JwkSerializer">
+            <summary>
+            Converts signing keys to JWK (JSON Web Key) format per RFC 7517.
+            Only public material is exported — private keys never leave this layer.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.JwkSerializer.FromEcKey(System.Security.Cryptography.ECDsa,System.String,System.String)">
+            <summary>
+            Exports an EC public key as a JWK object.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.JwkSerializer.FromRsaKey(System.Security.Cryptography.RSA,System.String,System.String)">
+            <summary>
+            Exports an RSA public key as a JWK object.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.JwkSerializer.BuildJwks(System.Collections.Generic.IEnumerable{SimpleAuth.Crypto.Jwk})">
+            <summary>
+            Serializes a JWKS document (array of JWKs) to a UTF-8 JSON byte array
+            for caching and direct HTTP response writing.
+            </summary>
+        </member>
+        <member name="T:SimpleAuth.Crypto.Jwk">
+            <summary>A JSON Web Key (public material only).</summary>
+            <param name="Kty">Key type: <c>EC</c> or <c>RSA</c>.</param>
+            <param name="Use">Key use: <c>sig</c>.</param>
+            <param name="Kid">Key ID.</param>
+            <param name="Alg">Algorithm: <c>ES256</c>, <c>RS256</c>, etc.</param>
+            <param name="Crv">EC curve (EC keys only): <c>P-256</c>.</param>
+            <param name="X">EC public key X coordinate (EC keys only).</param>
+            <param name="Y">EC public key Y coordinate (EC keys only).</param>
+            <param name="N">RSA modulus (RSA keys only).</param>
+            <param name="E">RSA public exponent (RSA keys only).</param>
+        </member>
+        <member name="M:SimpleAuth.Crypto.Jwk.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>A JSON Web Key (public material only).</summary>
+            <param name="Kty">Key type: <c>EC</c> or <c>RSA</c>.</param>
+            <param name="Use">Key use: <c>sig</c>.</param>
+            <param name="Kid">Key ID.</param>
+            <param name="Alg">Algorithm: <c>ES256</c>, <c>RS256</c>, etc.</param>
+            <param name="Crv">EC curve (EC keys only): <c>P-256</c>.</param>
+            <param name="X">EC public key X coordinate (EC keys only).</param>
+            <param name="Y">EC public key Y coordinate (EC keys only).</param>
+            <param name="N">RSA modulus (RSA keys only).</param>
+            <param name="E">RSA public exponent (RSA keys only).</param>
+        </member>
+        <member name="P:SimpleAuth.Crypto.Jwk.Kty">
+            <summary>Key type: <c>EC</c> or <c>RSA</c>.</summary>
+        </member>
+        <member name="P:SimpleAuth.Crypto.Jwk.Use">
+            <summary>Key use: <c>sig</c>.</summary>
+        </member>
+        <member name="P:SimpleAuth.Crypto.Jwk.Kid">
+            <summary>Key ID.</summary>
+        </member>
+        <member name="P:SimpleAuth.Crypto.Jwk.Alg">
+            <summary>Algorithm: <c>ES256</c>, <c>RS256</c>, etc.</summary>
+        </member>
+        <member name="P:SimpleAuth.Crypto.Jwk.Crv">
+            <summary>EC curve (EC keys only): <c>P-256</c>.</summary>
+        </member>
+        <member name="P:SimpleAuth.Crypto.Jwk.X">
+            <summary>EC public key X coordinate (EC keys only).</summary>
+        </member>
+        <member name="P:SimpleAuth.Crypto.Jwk.Y">
+            <summary>EC public key Y coordinate (EC keys only).</summary>
+        </member>
+        <member name="P:SimpleAuth.Crypto.Jwk.N">
+            <summary>RSA modulus (RSA keys only).</summary>
+        </member>
+        <member name="P:SimpleAuth.Crypto.Jwk.E">
+            <summary>RSA public exponent (RSA keys only).</summary>
+        </member>
+        <member name="T:SimpleAuth.Crypto.JwksDocument">
+            <summary>The <c>jwks.json</c> document: <c>{ "keys": [ ... ] }</c>.</summary>
+            <param name="Keys">The collection of public JWKs.</param>
+        </member>
+        <member name="M:SimpleAuth.Crypto.JwksDocument.#ctor(System.Collections.Generic.IReadOnlyList{SimpleAuth.Crypto.Jwk})">
+            <summary>The <c>jwks.json</c> document: <c>{ "keys": [ ... ] }</c>.</summary>
+            <param name="Keys">The collection of public JWKs.</param>
+        </member>
+        <member name="P:SimpleAuth.Crypto.JwksDocument.Keys">
+            <summary>The collection of public JWKs.</summary>
+        </member>
+        <member name="T:SimpleAuth.Crypto.JwtService">
+            <summary>
+            Issues signed JWTs (access tokens and ID tokens) using
+            <see cref="T:Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler"/> from Microsoft.IdentityModel.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.JwtService.RotateKey(SimpleAuth.Crypto.SigningKeyHolder)">
+            <summary>Replaces the active signing key (key rotation).</summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.JwtService.IssueAccessToken(System.String,System.String,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String},System.TimeSpan,System.Collections.Generic.IEnumerable{System.Security.Claims.Claim},System.String)">
+            <summary>
+            Issues an access token with <c>typ: at+jwt</c> per RFC 9068.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.JwtService.IssueIdToken(System.String,System.String,System.String,System.String,System.TimeSpan,System.Collections.Generic.IEnumerable{System.Security.Claims.Claim})">
+            <summary>
+            Issues an OIDC ID token per OpenID Connect Core 1.0 §2.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.JwtService.ComputeAtHash(System.String)">
+            <summary>
+            Computes <c>at_hash</c> claim: left-most half of SHA-256 of the access token,
+            Base64Url-encoded per OIDC Core §3.3.2.11.
+            </summary>
+        </member>
+        <member name="T:SimpleAuth.Crypto.SigningKeyHolder">
+            <summary>
+            Wraps a signing key with its <see cref="T:Microsoft.IdentityModel.Tokens.SigningCredentials"/> for use by <see cref="T:SimpleAuth.Crypto.JwtService"/>.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Crypto.SigningKeyHolder.Key">
+            <summary>Underlying key material.</summary>
+        </member>
+        <member name="P:SimpleAuth.Crypto.SigningKeyHolder.SecurityKey">
+            <summary>Security key used for JWT validation.</summary>
+        </member>
+        <member name="P:SimpleAuth.Crypto.SigningKeyHolder.KeyId">
+            <summary>Key ID matching the JWK in the JWKS document.</summary>
+        </member>
+        <member name="P:SimpleAuth.Crypto.SigningKeyHolder.Algorithm">
+            <summary>Algorithm: <c>ES256</c>, <c>RS256</c>, etc.</summary>
+        </member>
+        <member name="P:SimpleAuth.Crypto.SigningKeyHolder.Credentials">
+            <summary>Ready-to-use signing credentials for <see cref="T:Microsoft.IdentityModel.Tokens.SecurityTokenDescriptor"/>.</summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.SigningKeyHolder.FromEcKey(System.Security.Cryptography.ECDsa,System.String)">
+            <summary>Creates a holder from an EC key.</summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.SigningKeyHolder.FromRsaKey(System.Security.Cryptography.RSA,System.String)">
+            <summary>Creates a holder from an RSA key.</summary>
+        </member>
+        <member name="T:SimpleAuth.Crypto.PkceValidator">
+            <summary>
+            PKCE code verifier and challenge validator per RFC 7636.
+            Only <c>S256</c> is accepted — <c>plain</c> is permanently rejected.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.PkceValidator.Validate(System.String,System.String)">
+            <summary>
+            Validates a PKCE code verifier against the stored challenge.
+            Returns <see langword="true"/> only when the verifier is structurally valid
+            and its S256 challenge matches.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.PkceValidator.IsMethodAllowed(System.String)">
+            <summary>
+            Validates that a <c>code_challenge_method</c> value is accepted.
+            <c>plain</c> is always rejected per OAuth 2.1 §7.6.
+            </summary>
+        </member>
+        <member name="T:SimpleAuth.Crypto.SecretHasher">
+            <summary>
+            Hashes and verifies client and resource secrets using PBKDF2-SHA256.
+            Secrets are NEVER stored in plaintext — only the hash is persisted.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.SecretHasher.Hash(System.String)">
+            <summary>
+            Hashes a plaintext secret and returns a storable string.
+            Format: <c>v1:{base64(salt)}:{base64(hash)}</c>.
+            </summary>
+            <exception cref="T:System.ArgumentException"><paramref name="secret"/> is null or empty.</exception>
+        </member>
+        <member name="M:SimpleAuth.Crypto.SecretHasher.Verify(System.String,System.String)">
+            <summary>
+            Verifies a plaintext secret against a previously hashed value.
+            Returns <see langword="false"/> for any invalid or malformed stored hash.
+            </summary>
+        </member>
+        <member name="T:SimpleAuth.Crypto.SigningKeyGenerator">
+            <summary>
+            Generates signing keys for OAuth token issuance.
+            Supports EC P-256 (preferred) and RSA-2048.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.SigningKeyGenerator.CreateEcKey">
+            <summary>
+            Creates a new EC P-256 signing key with a deterministic key ID.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.SigningKeyGenerator.CreateRsaKey">
+            <summary>
+            Creates a new RSA-2048 signing key with a deterministic key ID.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.SigningKeyGenerator.ExportEcPrivateKeyPem(System.Security.Cryptography.ECDsa)">
+            <summary>
+            Exports an EC private key to PEM format.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.SigningKeyGenerator.ExportRsaPrivateKeyPem(System.Security.Cryptography.RSA)">
+            <summary>
+            Exports an RSA private key to PEM format (PKCS#8).
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.SigningKeyGenerator.ImportEcPrivateKeyPem(System.String)">
+            <summary>
+            Imports an EC private key from PEM.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.SigningKeyGenerator.ImportRsaPrivateKeyPem(System.String)">
+            <summary>
+            Imports an RSA private key from PEM.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Crypto.SigningKeyGenerator.BuildKeyId(System.String)">
+            <summary>
+            Builds a deterministic key ID: <c>{alg}-{yyyyMMddHHmmss}-{4hex}</c>.
+            Example: <c>ec-20260120-143022-a3f2</c>.
+            </summary>
+        </member>
+        <member name="T:SimpleAuth.Endpoints.DiscoveryEndpoint">
+            <summary>Serves the cached discovery document.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.DiscoveryEndpoint.HandleAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Writes the discovery JSON document (state resolved from DI).</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.DiscoveryEndpoint.HandleAsync(Microsoft.AspNetCore.Http.HttpContext,SimpleAuth.SimpleAuthServerState)">
+            <summary>Writes the discovery JSON document.</summary>
+        </member>
+        <member name="T:SimpleAuth.Endpoints.JwksEndpoint">
+            <summary>Serves the cached JWKS document.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.JwksEndpoint.HandleAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Writes the JWKS JSON document (state resolved from DI).</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.JwksEndpoint.HandleAsync(Microsoft.AspNetCore.Http.HttpContext,SimpleAuth.SimpleAuthServerState)">
+            <summary>Writes the JWKS JSON document.</summary>
+        </member>
+        <member name="T:SimpleAuth.Endpoints.AuthorizationEndpoint">
+            <summary>Issues authorization codes for the authorization code flow.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.AuthorizationEndpoint.HandleAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Handles browser-based authorization requests.</summary>
+        </member>
+        <member name="T:SimpleAuth.Endpoints.InteractionEndpoints">
+            <summary>Built-in minimal login and consent UI pages for SimpleAuth.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.InteractionEndpoints.HandleLoginAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Renders the login form (GET) or processes login (POST).</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.InteractionEndpoints.HandleConsentAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Renders the consent form (GET) or processes consent (POST).</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.InteractionEndpoints.HandleLogoutAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Handles logout.</summary>
+        </member>
+        <member name="T:SimpleAuth.Endpoints.JsonResponseWriter">
+            <summary>Writes JSON responses using source-generated metadata.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.JsonResponseWriter.WriteAsync``1(Microsoft.AspNetCore.Http.HttpContext,``0,System.Text.Json.Serialization.Metadata.JsonTypeInfo{``0})">
+            <summary>Serializes a value and writes it to the response body.</summary>
+        </member>
+        <member name="T:SimpleAuth.Endpoints.ProtocolTokenSupport">
+            <summary>Shared protocol helpers for bearer token endpoints.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.ProtocolTokenSupport.ResolveAccessTokenAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Attempts to resolve an active access token from the request bearer header.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.ProtocolTokenSupport.ResolveAccessTokenAsync(Microsoft.AspNetCore.Http.HttpContext,System.String)">
+            <summary>Attempts to resolve an active access token by its raw token value.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.ProtocolTokenSupport.WriteErrorAsync(Microsoft.AspNetCore.Http.HttpContext,System.Int32,System.String,System.String)">
+            <summary>Writes a standard OAuth error response.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.ProtocolTokenSupport.ResolveCallerClientAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Authenticates the caller client for management-style endpoints.</summary>
+        </member>
+        <member name="T:SimpleAuth.Endpoints.AccessTokenDetails">
+            <summary>Resolved access token metadata.</summary>
+        </member>
+        <member name="P:SimpleAuth.Endpoints.AccessTokenDetails.IsReference">
+            <summary>Gets whether the token was reference-based.</summary>
+        </member>
+        <member name="P:SimpleAuth.Endpoints.AccessTokenDetails.RawToken">
+            <summary>Gets the raw token or handle used on the request.</summary>
+        </member>
+        <member name="P:SimpleAuth.Endpoints.AccessTokenDetails.ClientId">
+            <summary>Gets the token client identifier, if known.</summary>
+        </member>
+        <member name="P:SimpleAuth.Endpoints.AccessTokenDetails.SubjectId">
+            <summary>Gets the subject identifier, if present.</summary>
+        </member>
+        <member name="P:SimpleAuth.Endpoints.AccessTokenDetails.Scopes">
+            <summary>Gets the granted scopes.</summary>
+        </member>
+        <member name="P:SimpleAuth.Endpoints.AccessTokenDetails.ExpiresAt">
+            <summary>Gets the expiration time if available.</summary>
+        </member>
+        <member name="P:SimpleAuth.Endpoints.AccessTokenDetails.Jti">
+            <summary>Gets the token identifier if available.</summary>
+        </member>
+        <member name="P:SimpleAuth.Endpoints.AccessTokenDetails.Claims">
+            <summary>Gets the underlying claims.</summary>
+        </member>
+        <member name="P:SimpleAuth.Endpoints.AccessTokenDetails.JktThumbprint">
+            <summary>
+            JWK thumbprint from the <c>cnf.jkt</c> claim (RFC 9449).
+            Non-null when the token is DPoP-bound; null for standard Bearer tokens.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.AccessTokenDetails.FromClaimsIdentity(System.Security.Claims.ClaimsIdentity,System.String,System.Boolean)">
+            <summary>Creates a detail object from a validated JWT.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.AccessTokenDetails.FromIssuedToken(SimpleAuth.IssuedToken,System.String)">
+            <summary>Creates a detail object from a reference token record.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.AccessTokenDetails.ExtractJktFromCnfClaim(System.Collections.Generic.IEnumerable{System.Security.Claims.Claim})">
+            <summary>
+            Extracts the DPoP JWK thumbprint from the <c>cnf</c> claim.
+            Microsoft.IdentityModel flattens nested JSON as a string claim with value = serialized JSON.
+            </summary>
+        </member>
+        <member name="T:SimpleAuth.Endpoints.UserInfoEndpoint">
+            <summary>Returns the current user's claims.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.UserInfoEndpoint.HandleAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Returns user claims based on the bearer token.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.UserInfoEndpoint.GetPresentedToken(Microsoft.AspNetCore.Http.HttpContext,System.String@)">
+            <summary>
+            Reads the raw access token string from the request, accepting both <c>Bearer</c> and <c>DPoP</c> schemes.
+            Outputs the scheme used so callers can enforce DPoP scheme requirement (RFC 9449 §7.1).
+            </summary>
+        </member>
+        <member name="T:SimpleAuth.Endpoints.IntrospectionEndpoint">
+            <summary>Returns token metadata for RFC 7662 introspection.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.IntrospectionEndpoint.HandleAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Returns whether the supplied token is active.</summary>
+        </member>
+        <member name="T:SimpleAuth.Endpoints.RevocationEndpoint">
+            <summary>Revokes access or refresh tokens.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.RevocationEndpoint.HandleAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Revokes a token handle and always returns 200.</summary>
+        </member>
+        <member name="T:SimpleAuth.Endpoints.EndSessionEndpoint">
+            <summary>
+            OIDC RP-Initiated Logout per OpenID Connect RP-Initiated Logout 1.0.
+            Revokes all tokens for the subject identified by <c>id_token_hint</c>
+            and redirects to <c>post_logout_redirect_uri</c> if provided.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.EndSessionEndpoint.HandleAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Processes the end-session request.</summary>
+        </member>
+        <member name="T:SimpleAuth.Endpoints.PushedAuthorizationEndpoint">
+            <summary>
+            Handles the Pushed Authorization Request endpoint (RFC 9126).
+            <c>POST /connect/par</c> — accepts the same parameters as the authorize endpoint,
+            authenticates the client, and returns a short-lived <c>request_uri</c> handle.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.PushedAuthorizationEndpoint.HandleAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Handles a PAR request.</summary>
+        </member>
+        <member name="T:SimpleAuth.Endpoints.SimpleAuthEndpointMiddlewareExtensions">
+            <summary>Routing helpers that map the built-in SimpleAuth endpoints.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.SimpleAuthEndpointMiddlewareExtensions.MapSimpleAuthWellKnown(Microsoft.AspNetCore.Builder.WebApplication)">
+            <summary>Adds the discovery endpoints to the pipeline.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.SimpleAuthEndpointMiddlewareExtensions.MapSimpleAuthConnect(Microsoft.AspNetCore.Builder.WebApplication)">
+            <summary>Adds the protocol endpoints to the pipeline.</summary>
+        </member>
+        <member name="T:SimpleAuth.Endpoints.TokenEndpoint">
+            <summary>Handles the token endpoint.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.TokenEndpoint.HandleAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>Processes client_credentials and authorization_code token requests.</summary>
+        </member>
+        <member name="M:SimpleAuth.Endpoints.TokenEndpoint.BuildHtu(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Builds the HTTP target URI (htu) for DPoP proof validation from the current request.
+            Strips the query string per RFC 9449 §4.2.
+            </summary>
+        </member>
+        <member name="T:SimpleAuth.TokenResponse">
+            <summary>Successful token endpoint response per RFC 6749 §5.1 / OAuth 2.1.</summary>
+        </member>
+        <member name="M:SimpleAuth.TokenResponse.#ctor(System.String,System.String,System.Int32)">
+            <summary>Successful token endpoint response per RFC 6749 §5.1 / OAuth 2.1.</summary>
+        </member>
+        <member name="P:SimpleAuth.TokenResponse.RefreshToken">
+            <summary>Refresh token (present only when <c>offline_access</c> was granted).</summary>
+        </member>
+        <member name="P:SimpleAuth.TokenResponse.Scope">
+            <summary>Granted scope when it differs from the requested scope.</summary>
+        </member>
+        <member name="P:SimpleAuth.TokenResponse.IdToken">
+            <summary>ID token (present only for OIDC requests).</summary>
+        </member>
+        <member name="T:SimpleAuth.ErrorResponse">
+            <summary>OAuth 2.x error response per RFC 6749 §5.2.</summary>
+        </member>
+        <member name="M:SimpleAuth.ErrorResponse.#ctor(System.String,System.String)">
+            <summary>OAuth 2.x error response per RFC 6749 §5.2.</summary>
+        </member>
+        <member name="T:SimpleAuth.DiscoveryDocument">
+            <summary>OIDC discovery document per OpenID Connect Discovery 1.0 §3.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.Issuer">
+            <summary>Issuer identifier URL.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.AuthorizationEndpoint">
+            <summary>Authorization endpoint URL.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.TokenEndpoint">
+            <summary>Token endpoint URL.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.UserInfoEndpoint">
+            <summary>UserInfo endpoint URL.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.JwksUri">
+            <summary>JWKS endpoint URL.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.EndSessionEndpoint">
+            <summary>End session endpoint URL.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.IntrospectionEndpoint">
+            <summary>Introspection endpoint URL.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.RevocationEndpoint">
+            <summary>Revocation endpoint URL.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.ResponseTypesSupported">
+            <summary>Supported response types.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.ResponseModesSupported">
+            <summary>Supported response modes.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.GrantTypesSupported">
+            <summary>Supported grant types.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.SubjectTypesSupported">
+            <summary>Supported subject types.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.IdTokenSigningAlgValuesSupported">
+            <summary>Supported ID token signing algorithms.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.ScopesSupported">
+            <summary>Supported scopes.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.TokenEndpointAuthMethodsSupported">
+            <summary>Supported token endpoint auth methods.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.ClaimsSupported">
+            <summary>Supported claims.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.CodeChallengeMethodsSupported">
+            <summary>Whether PKCE S256 is required.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.RequestObjectSigningAlgValuesSupported">
+            <summary>Supported request object signing algorithms (for PAR).</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.PushedAuthorizationRequestEndpoint">
+            <summary>PAR endpoint (RFC 9126).</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.RequirePushedAuthorizationRequests">
+            <summary>Whether PAR is required for all clients.</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.DPopSigningAlgValuesSupported">
+            <summary>DPoP signing algorithms supported (RFC 9449).</summary>
+        </member>
+        <member name="T:SimpleAuth.UserInfoResponse">
+            <summary>UserInfo endpoint response per OIDC Core §5.3.</summary>
+        </member>
+        <member name="M:SimpleAuth.UserInfoResponse.#ctor">
+            <summary>Initializes an empty UserInfo response.</summary>
+        </member>
+        <member name="T:SimpleAuth.IntrospectionResponse">
+            <summary>Token introspection response per RFC 7662 §2.2.</summary>
+        </member>
+        <member name="P:SimpleAuth.IntrospectionResponse.Active">
+            <summary>Whether the token is currently active.</summary>
+        </member>
+        <member name="P:SimpleAuth.IntrospectionResponse.Scope">
+            <summary>Space-separated list of scopes.</summary>
+        </member>
+        <member name="P:SimpleAuth.IntrospectionResponse.ClientId">
+            <summary>Client ID the token was issued to.</summary>
+        </member>
+        <member name="P:SimpleAuth.IntrospectionResponse.Sub">
+            <summary>Subject (end-user) identifier.</summary>
+        </member>
+        <member name="P:SimpleAuth.IntrospectionResponse.Exp">
+            <summary>Token expiration (Unix timestamp).</summary>
+        </member>
+        <member name="P:SimpleAuth.IntrospectionResponse.Iat">
+            <summary>Token issued-at (Unix timestamp).</summary>
+        </member>
+        <member name="P:SimpleAuth.IntrospectionResponse.Nbf">
+            <summary>Token not-before (Unix timestamp).</summary>
+        </member>
+        <member name="P:SimpleAuth.IntrospectionResponse.Jti">
+            <summary>JWT ID (token unique identifier).</summary>
+        </member>
+        <member name="P:SimpleAuth.IntrospectionResponse.Iss">
+            <summary>Issuer.</summary>
+        </member>
+        <member name="P:SimpleAuth.IntrospectionResponse.Aud">
+            <summary>Audience.</summary>
+        </member>
+        <member name="P:SimpleAuth.IntrospectionResponse.TokenType">
+            <summary>Token type hint.</summary>
+        </member>
+        <member name="T:SimpleAuth.ParResponse">
+            <summary>Pushed Authorization Request response per RFC 9126 §2.2.</summary>
+        </member>
+        <member name="M:SimpleAuth.ParResponse.#ctor(System.String,System.Int32)">
+            <summary>Pushed Authorization Request response per RFC 9126 §2.2.</summary>
+        </member>
+        <member name="T:SimpleAuth.Serialization.AuthJsonContext">
+            <summary>
+            Source-generated JSON context for all SimpleAuth HTTP response types.
+            Native AOT-safe — no reflection used at runtime.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.Boolean">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.NullableBoolean">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.Jwk">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.JwksDocument">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.DiscoveryDocument">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.ErrorResponse">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.IntrospectionResponse">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.ParResponse">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.TokenResponse">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.UserInfoResponse">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.IReadOnlyListJwk">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.IReadOnlyListString">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.Int32">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.Int64">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.NullableInt64">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.Object">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.String">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.Default">
+            <summary>
+            The default <see cref="T:System.Text.Json.Serialization.JsonSerializerContext"/> associated with a default <see cref="T:System.Text.Json.JsonSerializerOptions"/> instance.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Serialization.AuthJsonContext.GeneratedSerializerOptions">
+            <summary>
+            The source-generated options associated with this context.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.Serialization.AuthJsonContext.#ctor">
+            <inheritdoc/>
+        </member>
+        <member name="M:SimpleAuth.Serialization.AuthJsonContext.#ctor(System.Text.Json.JsonSerializerOptions)">
+            <inheritdoc/>
+        </member>
+        <member name="M:SimpleAuth.Serialization.AuthJsonContext.GetTypeInfo(System.Type)">
+            <inheritdoc/>
+        </member>
+        <member name="T:SimpleAuth.SimpleAuthExtensions">
+            <summary>
+            Entry-point extensions for wiring SimpleAuth into ASP.NET Core.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.SimpleAuthExtensions.AddSimpleAuth(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{SimpleAuth.Configuration.SimpleAuthServerConfiguration})">
+            <summary>
+            Registers SimpleAuth services using the provided configuration lambda.
+            </summary>
+        </member>
+        <member name="M:SimpleAuth.SimpleAuthExtensions.MapSimpleAuth(Microsoft.AspNetCore.Builder.WebApplication)">
+            <summary>
+            Maps the SimpleAuth HTTP endpoints into the app pipeline.
+            </summary>
+        </member>
+        <member name="T:SimpleAuth.SimpleAuthServerState">
+            <summary>Internal singleton state for cached discovery and JWKS documents.</summary>
+        </member>
+        <member name="M:SimpleAuth.SimpleAuthServerState.#ctor(System.String,System.ReadOnlyMemory{System.Byte},System.ReadOnlyMemory{System.Byte})">
+            <summary>Creates the server state.</summary>
+        </member>
+        <member name="P:SimpleAuth.SimpleAuthServerState.Issuer">
+            <summary>Issuer URL.</summary>
+        </member>
+        <member name="P:SimpleAuth.SimpleAuthServerState.DiscoveryJson">
+            <summary>Cached discovery JSON bytes.</summary>
+        </member>
+        <member name="P:SimpleAuth.SimpleAuthServerState.JwksJson">
+            <summary>Cached JWKS JSON bytes.</summary>
+        </member>
+        <member name="T:SimpleAuth.RateLimitPolicyNames">
+            <summary>Named rate-limiter policies used by SimpleAuth endpoints.</summary>
+        </member>
+    </members>
+</doc>
