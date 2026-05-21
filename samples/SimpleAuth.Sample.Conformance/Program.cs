@@ -18,9 +18,9 @@ using SimpleAuth.Crypto;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Read configuration from environment or appsettings
-string issuer = builder.Configuration["SimpleAuth:Issuer"]
-    ?? Environment.GetEnvironmentVariable("SIMPLEAUTH_ISSUER")
+// Read configuration: env var takes priority over appsettings
+string issuer = Environment.GetEnvironmentVariable("SIMPLEAUTH_ISSUER")
+    ?? builder.Configuration["SimpleAuth:Issuer"]
     ?? "https://localhost:5001";
 
 string testUserSub = builder.Configuration["SimpleAuth:TestUser:Sub"]
@@ -43,7 +43,7 @@ string conformanceSuiteBase = builder.Configuration["SimpleAuth:ConformanceSuite
 builder.Services.AddSimpleAuth(server =>
 {
     server.Issuer = issuer;
-    server.Keys.UseDevelopmentKey();
+    server.Keys.UseDevelopmentRsaKey(); // OIDC Core requires RS256 as mandatory algorithm
 
     server.Store.UseInMemory(store =>
     {
@@ -79,7 +79,7 @@ builder.Services.AddSimpleAuth(server =>
                 $"{conformanceSuiteBase}/test/a/simpleauth-basic/post_logout_redirect",
             ],
             RequireClientSecret = true,
-            RequirePkce = true,
+            RequirePkce = false, // OIDC Basic profile tests do not always send PKCE for confidential clients
             AllowOfflineAccess = true,
             RequireConsent = false,
             TokenEndpointAuthMethod = AuthMethod.ClientSecretBasic,
@@ -120,7 +120,7 @@ builder.Services.AddSimpleAuth(server =>
                 $"{conformanceSuiteBase}/test/a/simpleauth-post/post_logout_redirect",
             ],
             RequireClientSecret = true,
-            RequirePkce = true,
+            RequirePkce = false, // OIDC Basic profile tests do not always send PKCE for confidential clients
             AllowOfflineAccess = true,
             RequireConsent = false,
             TokenEndpointAuthMethod = AuthMethod.ClientSecretPost,
@@ -159,7 +159,7 @@ builder.Services.AddSimpleAuth(server =>
                 $"{conformanceSuiteBase}/test/a/simpleauth-public/post_logout_redirect",
             ],
             RequireClientSecret = false,
-            RequirePkce = true,
+            RequirePkce = true, // Public clients MUST use PKCE
             AllowOfflineAccess = true,
             RequireConsent = false,
             TokenEndpointAuthMethod = AuthMethod.None,
@@ -184,7 +184,7 @@ builder.Services.AddSimpleAuth(server =>
                 $"{conformanceSuiteBase}/test/a/simpleauth-second/callback",
             ],
             RequireClientSecret = true,
-            RequirePkce = true,
+            RequirePkce = false, // OIDC Basic profile tests do not always send PKCE for confidential clients
             RequireConsent = false,
             TokenEndpointAuthMethod = AuthMethod.ClientSecretBasic,
             AccessTokenType = AccessTokenType.Jwt,
@@ -194,6 +194,12 @@ builder.Services.AddSimpleAuth(server =>
                 {
                     Type = "SharedSecret",
                     Value = SecretHasher.Hash("conformance-secret-second"),
+                },
+                // Accept secret with trailing space — the conformance suite UI sometimes appends one.
+                new ClientCredential
+                {
+                    Type = "SharedSecret",
+                    Value = SecretHasher.Hash("conformance-secret-second "),
                 },
             ],
         });
@@ -223,6 +229,23 @@ WebApplication app = builder.Build();
 // POST /autologin?sub=test-user → sets cookie and redirects to returnUrl
 // This enables automated test execution without manual login.
 app.MapPost("/autologin", HandleAutoLogin);
+
+// ── Auto-logout endpoint ───────────────────────────────────────────────────────
+// GET /autologout → clears the session cookie (required before prompt=none-not-logged-in test)
+app.MapGet("/autologout", async (HttpContext ctx) =>
+{
+    await ctx.SignOutAsync("SimpleAuth.Cookie");
+    return Results.Content("""
+        <!DOCTYPE html><html><head><title>Logged Out</title>
+        <meta http-equiv="refresh" content="2;url=/">
+        <style>body{font-family:system-ui;max-width:500px;margin:4rem auto;text-align:center;background:#111;color:#eee}</style>
+        </head><body>
+        <h2>✅ Session cleared</h2>
+        <p>You are now logged out. You can proceed with the <strong>prompt-none-not-logged-in</strong> conformance test.</p>
+        <p><a href="/" style="color:#60a5fa">← Back to home</a></p>
+        </body></html>
+        """, "text/html");
+});
 
 // ── Status endpoint for health checks ─────────────────────────────────────────
 app.MapGet("/status", () => Results.Ok(new
@@ -270,14 +293,19 @@ a{color:#60a5fa}pre{background:#1a1a2e;padding:1rem;border-radius:8px;overflow-x
 <tr style="border-bottom:1px solid #222"><td style="padding:0.3rem"><code>simpleauth-basic</code></td><td><code>conformance-secret-basic</code></td><td>client_secret_basic</td></tr>
 <tr style="border-bottom:1px solid #222"><td style="padding:0.3rem"><code>simpleauth-post</code></td><td><code>conformance-secret-post</code></td><td>client_secret_post</td></tr>
 <tr style="border-bottom:1px solid #222"><td style="padding:0.3rem"><code>simpleauth-public</code></td><td>—</td><td>none (public)</td></tr>
-<tr><td style="padding:0.3rem"><code>simpleauth-second</code></td><td><code>conformance-secret-second</code></td><td>client_secret_basic</td></tr>
+<tr><td style="padding:0.3rem"><code>simpleauth-second</code></td><td><code>conformance-secret-second</code></td><td>client_secret_basic <span style="color:#f59e0b;font-size:0.75rem">(no trailing space)</span></td></tr>
 </table>
+<p style="font-size:0.75rem;color:#f59e0b;margin-top:0.5rem">⚠️ Enter secrets exactly as shown — the conformance suite sometimes adds a trailing space.</p>
 </div>
 
 <div class="card">
 <h3>👤 Test User</h3>
 <p>Sub: <code>{{testUserSub}}</code> | Name: {{testUserName}} | Email: {{testUserEmail}}</p>
 <p style="font-size:0.8rem;color:#888">Use the built-in login page at <code>/account/login</code>. Enter the test user sub as username.</p>
+<p style="margin-top:0.5rem">
+  <a href="/autologout" style="background:#ef4444;color:#fff;padding:0.3rem 0.8rem;border-radius:4px;text-decoration:none;font-size:0.8rem">🚪 Logout (clear session)</a>
+  <span style="font-size:0.75rem;color:#888;margin-left:0.5rem">Required before running <code>prompt-none-not-logged-in</code></span>
+</p>
 </div>
 
 <div class="card">
@@ -292,6 +320,7 @@ Client ID:          simpleauth-basic
 Client Secret:      conformance-secret-basic
 </pre></li>
 <li>Run the tests — when prompted to login, enter <code>{{testUserSub}}</code> as username</li>
+<li>⚠️ Before running <strong>prompt-none-not-logged-in</strong>: click the <strong>Logout</strong> button above (or visit <a href="/autologout"><code>/autologout</code></a>) to clear your session</li>
 <li>All tests should pass for the Basic OP profile ✅</li>
 </ol>
 </div>
@@ -333,6 +362,7 @@ static async Task HandleAutoLogin(HttpContext ctx)
         new("sub", sub),
         new(ClaimTypes.NameIdentifier, sub),
         new("name", $"User {sub}"),
+        new("auth_time", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture), ClaimValueTypes.Integer64),
     };
 
     var identity = new ClaimsIdentity(claims, "SimpleAuth.Cookie");
@@ -350,31 +380,43 @@ internal sealed class ConformanceClaimsEnricher(string testSub, string testName,
 {
     public ValueTask EnrichAsync(ClaimsEnrichmentContext context, CancellationToken cancellationToken = default)
     {
-        // Return full profile claims for the test user
+        // OIDC Core §5.1 — Return all standard profile claims for the test user
         if (context.GrantedScopes.Contains(StandardScope.Profile, StringComparer.Ordinal))
         {
             context.Claims.Add(new Claim("name", testName));
             context.Claims.Add(new Claim("given_name", "Test"));
             context.Claims.Add(new Claim("family_name", "User"));
+            context.Claims.Add(new Claim("middle_name", "A"));
+            context.Claims.Add(new Claim("nickname", testSub));
             context.Claims.Add(new Claim("preferred_username", testSub));
+            context.Claims.Add(new Claim("profile", $"https://example.com/users/{testSub}"));
+            context.Claims.Add(new Claim("picture", "https://example.com/users/test-user/photo.jpg"));
+            context.Claims.Add(new Claim("website", "https://example.com"));
+            context.Claims.Add(new Claim("gender", "male"));
+            context.Claims.Add(new Claim("birthdate", "1990-01-01"));
+            context.Claims.Add(new Claim("zoneinfo", "America/Sao_Paulo"));
+            context.Claims.Add(new Claim("locale", "pt-BR"));
+            // updated_at must be a number — CoerceClaimValue in UserInfoEndpoint handles long.Parse
             context.Claims.Add(new Claim("updated_at", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()));
         }
 
         if (context.GrantedScopes.Contains(StandardScope.Email, StringComparer.Ordinal))
         {
             context.Claims.Add(new Claim("email", testEmail));
-            context.Claims.Add(new Claim("email_verified", "true"));
+            // email_verified must be boolean — CoerceClaimValue handles bool.Parse
+            context.Claims.Add(new Claim("email_verified", "true", ClaimValueTypes.Boolean));
         }
 
         if (context.GrantedScopes.Contains(StandardScope.Phone, StringComparer.Ordinal))
         {
             context.Claims.Add(new Claim("phone_number", "+1-555-0100"));
-            context.Claims.Add(new Claim("phone_number_verified", "true"));
+            context.Claims.Add(new Claim("phone_number_verified", "true", ClaimValueTypes.Boolean));
         }
 
         if (context.GrantedScopes.Contains(StandardScope.Address, StringComparer.Ordinal))
         {
-            context.Claims.Add(new Claim("address", """{"street_address":"123 Test St","locality":"Testville","region":"TS","postal_code":"12345","country":"BR"}"""));
+            // address must be a JSON object per OIDC Core §5.1.1
+            context.Claims.Add(new Claim("address", """{"formatted":"123 Test St\nTestville, TS 12345\nBR","street_address":"123 Test St","locality":"Testville","region":"TS","postal_code":"12345","country":"BR"}"""));
         }
 
         return ValueTask.CompletedTask;
