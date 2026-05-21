@@ -106,6 +106,21 @@
              </code>
              </example>
         </member>
+        <member name="M:SimpleAuth.EntityFramework.EntityFrameworkExtensions.AddSimpleAuthEntityFrameworkTransactionalStores``1(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers only the transactional EF Core stores — authorization codes, refresh tokens,
+            access tokens, PAR entries, JTIs, and user consents.
+            </summary>
+            <remarks>
+            Use this overload when clients, API scopes, and signing keys are managed separately
+            (e.g., via <c>server.Store.UseInMemory</c> in <c>AddSimpleAuth</c> or an external Key Vault).
+            The last-registered implementation wins in ASP.NET Core DI, so call this method
+            <em>after</em> <c>AddSimpleAuth</c>.
+            </remarks>
+            <typeparam name="TContext">
+            A <see cref="T:Microsoft.EntityFrameworkCore.DbContext"/> derived from <see cref="T:SimpleAuth.EntityFramework.SimpleAuthDbContext"/>.
+            </typeparam>
+        </member>
         <member name="M:SimpleAuth.EntityFramework.EntityFrameworkExtensions.MigrateAsync(SimpleAuth.EntityFramework.SimpleAuthDbContext,System.Threading.CancellationToken)">
             <summary>
             Applies any pending migrations and optionally seeds initial data.

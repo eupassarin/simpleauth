@@ -46,6 +46,9 @@
         <member name="P:SimpleAuth.EntityFramework.Entities.RefreshTokenEntity.GrantedScopes">
             <summary>JSON: string[]</summary>
         </member>
+        <member name="P:SimpleAuth.EntityFramework.Entities.RefreshTokenEntity.DPopJkt">
+            <summary>JWK thumbprint for DPoP binding (RFC 9449 §10.1).</summary>
+        </member>
         <member name="T:SimpleAuth.EntityFramework.Entities.IssuedTokenEntity">
             <summary>EF Core entity for an issued (reference) access token.</summary>
         </member>

@@ -28,8 +28,21 @@ internal static class PkceValidator
         Span<byte> hash = stackalloc byte[32];
         int written = SHA256.HashData(Encoding.ASCII.GetBytes(codeVerifier), hash);
 
-        return written == 32 &&
-               string.Equals(Base64UrlEncode(hash), codeChallenge, StringComparison.Ordinal);
+        if (written != 32)
+        {
+            return false;
+        }
+
+        // Constant-time comparison to prevent timing attacks
+        string computed = Base64UrlEncode(hash);
+        if (computed.Length != codeChallenge.Length)
+        {
+            return false;
+        }
+
+        return CryptographicOperations.FixedTimeEquals(
+            Encoding.UTF8.GetBytes(computed),
+            Encoding.UTF8.GetBytes(codeChallenge));
     }
 
     /// <summary>

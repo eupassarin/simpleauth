@@ -200,6 +200,9 @@
         <member name="M:SimpleAuth.Crypto.DPopProofValidator.ComputeThumbprint(System.Text.Json.JsonElement)">
             <summary>Computes the JWK thumbprint (RFC 7638) for a public key JSON element.</summary>
         </member>
+        <member name="M:SimpleAuth.Crypto.DPopProofValidator.ContainsPrivateKeyMaterial(System.Text.Json.JsonElement)">
+            <summary>Checks if a JWK JSON element contains private key parameters (d, p, q, dp, dq, qi).</summary>
+        </member>
         <member name="M:SimpleAuth.Crypto.DPopProofValidator.BuildSecurityKeyAndThumbprint(System.Text.Json.JsonElement)">
             <summary>Builds a <see cref="T:Microsoft.IdentityModel.Tokens.SecurityKey"/> and JWK thumbprint from a jwk JSON element.</summary>
         </member>

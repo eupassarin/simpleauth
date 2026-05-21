@@ -112,6 +112,7 @@ internal sealed class EfRefreshTokenStore : IRefreshTokenStore
             SessionId = token.SessionId,
             IsRevoked = false,
             Generation = token.Generation,
+            DPopJkt = token.DPopJkt,
         };
 
         _context.RefreshTokens.Add(entity);
@@ -151,6 +152,7 @@ internal sealed class EfRefreshTokenStore : IRefreshTokenStore
             SessionId = newToken.SessionId,
             IsRevoked = false,
             Generation = newToken.Generation,
+            DPopJkt = newToken.DPopJkt,
         };
 
         _context.RefreshTokens.Add(newEntity);
@@ -186,6 +188,7 @@ internal sealed class EfRefreshTokenStore : IRefreshTokenStore
         SessionId = e.SessionId,
         IsRevoked = e.IsRevoked,
         Generation = e.Generation,
+        DPopJkt = e.DPopJkt,
     };
 }
 

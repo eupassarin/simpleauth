@@ -62,6 +62,10 @@ internal sealed class RefreshTokenEntity
 
     public bool IsRevoked { get; set; }
     public int Generation { get; set; }
+
+    /// <summary>JWK thumbprint for DPoP binding (RFC 9449 §10.1).</summary>
+    [MaxLength(128)]
+    public string? DPopJkt { get; set; }
 }
 
 /// <summary>EF Core entity for an issued (reference) access token.</summary>

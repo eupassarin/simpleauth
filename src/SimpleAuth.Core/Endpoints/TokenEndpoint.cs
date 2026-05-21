@@ -193,7 +193,7 @@ internal static class TokenEndpoint
         string? refreshTokenHandle = null;
         if (CanIssueRefreshToken(client, authorizationCode.GrantedScopes))
         {
-            (refreshToken, refreshTokenHandle) = await IssueRefreshTokenAsync(context, refreshTokenStore, client, authorizationCode, authorizationCode.GrantedScopes);
+            (refreshToken, refreshTokenHandle) = await IssueRefreshTokenAsync(context, refreshTokenStore, client, authorizationCode, authorizationCode.GrantedScopes, dpopJkt);
         }
 
         string accessToken = await IssueAccessTokenAsync(context, state, tokenStore, jwt, client, authorizationCode.SubjectId, authorizationCode.GrantedScopes, refreshTokenHandle, dpopJkt);
@@ -255,6 +255,22 @@ internal static class TokenEndpoint
             return;
         }
 
+        // RFC 9449 §10.1: DPoP-bound refresh tokens MUST require a matching DPoP proof on refresh.
+        if (current.DPopJkt is not null)
+        {
+            if (dpopJkt is null)
+            {
+                await JsonErrorAsync(context, StatusCodes.Status400BadRequest, "use_dpop_nonce", "DPoP proof is required for this refresh token.");
+                return;
+            }
+
+            if (!string.Equals(current.DPopJkt, dpopJkt, StringComparison.Ordinal))
+            {
+                await JsonErrorAsync(context, StatusCodes.Status400BadRequest, "invalid_grant", "DPoP proof key does not match the refresh token binding.");
+                return;
+            }
+        }
+
         IReadOnlyList<string> requestedScopes = ParseScopes(form["scope"].ToString());
         IReadOnlyList<string> grantedScopes = ValidateRefreshScopes(current.GrantedScopes, requestedScopes);
         if (grantedScopes.Count == 0)
@@ -263,22 +279,8 @@ internal static class TokenEndpoint
             return;
         }
 
-        string accessToken = await IssueAccessTokenAsync(context, state, tokenStore, jwt, client, current.SubjectId, grantedScopes, refreshTokenHandle, dpopJkt);
-        string? idToken = null;
-        if (grantedScopes.Contains(StandardScope.OpenId, StringComparer.Ordinal) && !string.IsNullOrWhiteSpace(current.SubjectId))
-        {
-            IReadOnlyList<Claim> enrichedClaims = await EnrichIdentityClaimsAsync(
-                context, current.SubjectId, client.ClientId, grantedScopes);
-
-            idToken = jwt.IssueIdToken(
-                current.SubjectId,
-                client.ClientId,
-                nonce: null,
-                accessToken,
-                client.IdentityTokenLifetime,
-                enrichedClaims);
-        }
-
+        // Rotate refresh token and revoke old access tokens BEFORE issuing new ones,
+        // so that RevokeByRefreshTokenAsync doesn't accidentally revoke the new access token.
         string nextRefreshTokenHandle = refreshTokenHandle;
         if (client.RefreshTokenUsage == TokenUsage.OneTimeOnly)
         {
@@ -298,6 +300,7 @@ internal static class TokenEndpoint
                     : current.SlidingExpiresAt,
                 SessionId = current.SessionId,
                 Generation = current.Generation + 1,
+                DPopJkt = current.DPopJkt,
             };
 
             await refreshTokenStore.ReplaceAsync(refreshTokenHandle, nextToken, context.RequestAborted);
@@ -317,9 +320,27 @@ internal static class TokenEndpoint
                 SessionId = current.SessionId,
                 IsRevoked = false,
                 Generation = current.Generation,
+                DPopJkt = current.DPopJkt,
             };
 
             await refreshTokenStore.StoreAsync(updated, context.RequestAborted);
+        }
+
+        // Issue new access token linked to the NEW refresh token handle.
+        string accessToken = await IssueAccessTokenAsync(context, state, tokenStore, jwt, client, current.SubjectId, grantedScopes, nextRefreshTokenHandle, dpopJkt);
+        string? idToken = null;
+        if (grantedScopes.Contains(StandardScope.OpenId, StringComparer.Ordinal) && !string.IsNullOrWhiteSpace(current.SubjectId))
+        {
+            IReadOnlyList<Claim> enrichedClaims = await EnrichIdentityClaimsAsync(
+                context, current.SubjectId, client.ClientId, grantedScopes);
+
+            idToken = jwt.IssueIdToken(
+                current.SubjectId,
+                client.ClientId,
+                nonce: null,
+                accessToken,
+                client.IdentityTokenLifetime,
+                enrichedClaims);
         }
 
         int expiresIn = (int)Math.Max(1, client.AccessTokenLifetime.TotalSeconds);
@@ -343,7 +364,8 @@ internal static class TokenEndpoint
         IRefreshTokenStore refreshTokenStore,
         Client client,
         AuthorizationCode authorizationCode,
-        IReadOnlyList<string> grantedScopes)
+        IReadOnlyList<string> grantedScopes,
+        string? dpopJkt = null)
     {
         string handle = CreateOpaqueHandle();
         var token = new RefreshToken
@@ -359,6 +381,7 @@ internal static class TokenEndpoint
                 : null,
             SessionId = authorizationCode.SessionId,
             Generation = 0,
+            DPopJkt = dpopJkt,
         };
 
         await refreshTokenStore.StoreAsync(token, context.RequestAborted);
@@ -498,6 +521,11 @@ internal static class TokenEndpoint
                 continue;
             }
 
+            if (credential.Expiration is DateTime exp && exp <= DateTime.UtcNow)
+            {
+                continue;
+            }
+
             if (SecretHasher.Verify(clientSecret, credential.Value))
             {
                 return true;
@@ -536,8 +564,8 @@ internal static class TokenEndpoint
             return false;
         }
 
-        clientId = decoded[..separator];
-        clientSecret = decoded[(separator + 1)..];
+        clientId = Uri.UnescapeDataString(decoded[..separator]);
+        clientSecret = Uri.UnescapeDataString(decoded[(separator + 1)..]);
         return true;
     }
 

@@ -70,7 +70,8 @@ internal static class DPopProofValidator
         try
         {
             byte[] headerBytes = Base64UrlDecode(parts[0]);
-            headerElement = JsonDocument.Parse(headerBytes).RootElement.Clone();
+            using JsonDocument doc = JsonDocument.Parse(headerBytes);
+            headerElement = doc.RootElement.Clone();
         }
         catch
         {
@@ -100,6 +101,12 @@ internal static class DPopProofValidator
         if (!headerElement.TryGetProperty("jwk", out JsonElement jwkElement))
         {
             return DPopValidationResult.Fail("DPoP proof header is missing the jwk field.");
+        }
+
+        // RFC 9449 §4.3 step 2: the jwk MUST NOT contain private key material.
+        if (ContainsPrivateKeyMaterial(jwkElement))
+        {
+            return DPopValidationResult.Fail("DPoP proof jwk MUST NOT contain private key parameters.");
         }
 
         SecurityKey? publicKey;
@@ -191,7 +198,10 @@ internal static class DPopProofValidator
         {
             string expectedAth = ComputeAth(accessToken);
             string? ath = jwt.GetClaim("ath")?.Value;
-            if (!string.Equals(ath, expectedAth, StringComparison.Ordinal))
+            if (ath is null || ath.Length != expectedAth.Length ||
+                !CryptographicOperations.FixedTimeEquals(
+                    Encoding.UTF8.GetBytes(ath),
+                    Encoding.UTF8.GetBytes(expectedAth)))
             {
                 return DPopValidationResult.Fail("DPoP proof ath does not match the presented access token.");
             }
@@ -209,6 +219,17 @@ internal static class DPopProofValidator
 
     // ─── Private helpers ─────────────────────────────────────────────────────
 
+    /// <summary>Checks if a JWK JSON element contains private key parameters (d, p, q, dp, dq, qi).</summary>
+    private static bool ContainsPrivateKeyMaterial(JsonElement jwk)
+    {
+        return jwk.TryGetProperty("d", out _) ||
+               jwk.TryGetProperty("p", out _) ||
+               jwk.TryGetProperty("q", out _) ||
+               jwk.TryGetProperty("dp", out _) ||
+               jwk.TryGetProperty("dq", out _) ||
+               jwk.TryGetProperty("qi", out _);
+    }
+
     /// <summary>Builds a <see cref="SecurityKey"/> and JWK thumbprint from a jwk JSON element.</summary>
     private static (SecurityKey? Key, string Thumbprint) BuildSecurityKeyAndThumbprint(JsonElement jwk)
     {
@@ -224,9 +245,10 @@ internal static class DPopProofValidator
 
             ECCurve curve = crv switch
             {
+                "P-256" => ECCurve.NamedCurves.nistP256,
                 "P-384" => ECCurve.NamedCurves.nistP384,
                 "P-521" => ECCurve.NamedCurves.nistP521,
-                _ => ECCurve.NamedCurves.nistP256,
+                _ => throw new NotSupportedException($"Unsupported EC curve: {crv}"),
             };
 
             var ecParams = new ECParameters

@@ -441,6 +441,7 @@ public sealed class InMemoryRefreshTokenStore : IRefreshTokenStore
                     SessionId = token.SessionId,
                     IsRevoked = true,
                     Generation = token.Generation,
+                    DPopJkt = token.DPopJkt,
                 };
             }
         }
@@ -491,6 +492,7 @@ public sealed class InMemoryRefreshTokenStore : IRefreshTokenStore
                 SessionId = token.SessionId,
                 IsRevoked = true,
                 Generation = token.Generation,
+                DPopJkt = token.DPopJkt,
             };
         }
     }
@@ -580,6 +582,7 @@ public sealed class InMemoryTokenStore : ITokenStore
                     ExpiresAt = token.ExpiresAt,
                     IsRevoked = true,
                     RefreshTokenHandle = token.RefreshTokenHandle,
+                    JktThumbprint = token.JktThumbprint,
                 };
             }
         }
@@ -654,6 +657,7 @@ public sealed class InMemoryTokenStore : ITokenStore
                 ExpiresAt = token.ExpiresAt,
                 IsRevoked = true,
                 RefreshTokenHandle = token.RefreshTokenHandle,
+                JktThumbprint = token.JktThumbprint,
             };
         }
     }

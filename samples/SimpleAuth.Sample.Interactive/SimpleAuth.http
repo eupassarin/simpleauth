@@ -1,0 +1,113 @@
+### SimpleAuth — Interactive HTTP Requests
+### Use with VS Code REST Client extension or JetBrains HTTP Client
+### Server: https://localhost:5001
+
+@baseUrl = https://localhost:5001
+@clientId = m2m-demo
+@clientSecret = demo-secret
+@resourceClient = resource-server
+@resourceSecret = resource-secret
+
+### ═══════════════════════════════════════════════════════════════════════
+### 1. Discovery
+### ═══════════════════════════════════════════════════════════════════════
+
+### Fetch OpenID Configuration
+GET {{baseUrl}}/.well-known/openid-configuration
+
+### Fetch JWKS (Public Keys)
+GET {{baseUrl}}/.well-known/jwks.json
+
+### ═══════════════════════════════════════════════════════════════════════
+### 2. Client Credentials (Machine-to-Machine)
+### ═══════════════════════════════════════════════════════════════════════
+
+### Get access token using client_credentials grant
+# @name clientCredentials
+POST {{baseUrl}}/connect/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic {{clientId}}:{{clientSecret}}
+
+grant_type=client_credentials&scope=api
+
+### ═══════════════════════════════════════════════════════════════════════
+### 3. Token Introspection (RFC 7662)
+### ═══════════════════════════════════════════════════════════════════════
+
+### Introspect the access token from client_credentials
+POST {{baseUrl}}/connect/introspect
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic {{resourceClient}}:{{resourceSecret}}
+
+token={{clientCredentials.response.body.access_token}}
+
+### ═══════════════════════════════════════════════════════════════════════
+### 4. Token Revocation (RFC 7009)
+### ═══════════════════════════════════════════════════════════════════════
+
+### Revoke the access token
+POST {{baseUrl}}/connect/revocation
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic {{resourceClient}}:{{resourceSecret}}
+
+token={{clientCredentials.response.body.access_token}}&token_type_hint=access_token
+
+### Verify revocation (should return active: false)
+POST {{baseUrl}}/connect/introspect
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic {{resourceClient}}:{{resourceSecret}}
+
+token={{clientCredentials.response.body.access_token}}
+
+### ═══════════════════════════════════════════════════════════════════════
+### 5. PAR (Pushed Authorization Request - RFC 9126)
+### ═══════════════════════════════════════════════════════════════════════
+
+### Push authorization parameters
+# @name par
+POST {{baseUrl}}/connect/par
+Content-Type: application/x-www-form-urlencoded
+
+response_type=code&client_id=interactive-dashboard&redirect_uri=https://localhost:5001/callback&scope=openid profile email&state=test123&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256
+
+### ═══════════════════════════════════════════════════════════════════════
+### 6. UserInfo (requires a valid access token from auth code flow)
+### ═══════════════════════════════════════════════════════════════════════
+
+### Get user profile claims
+GET {{baseUrl}}/connect/userinfo
+Authorization: Bearer <paste-access-token-here>
+
+### ═══════════════════════════════════════════════════════════════════════
+### 7. End Session
+### ═══════════════════════════════════════════════════════════════════════
+
+### Logout (RP-Initiated)
+GET {{baseUrl}}/connect/endsession?post_logout_redirect_uri=https://localhost:5001/
+
+### ═══════════════════════════════════════════════════════════════════════
+### 8. Authorization Code Flow (manual steps)
+###
+### Step 1: Open in browser:
+### https://localhost:5001/connect/authorize?response_type=code&client_id=interactive-dashboard&redirect_uri=https://localhost:5001/callback&scope=openid%20profile%20email%20offline_access&state=xyz&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256
+###
+### Step 2: After login+consent, extract ?code=... from the redirect
+###
+### Step 3: Exchange code for tokens:
+### ═══════════════════════════════════════════════════════════════════════
+
+### Exchange authorization code (fill in code and code_verifier)
+POST {{baseUrl}}/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&code=<paste-code>&redirect_uri=https://localhost:5001/callback&client_id=interactive-dashboard&code_verifier=<paste-verifier>
+
+### ═══════════════════════════════════════════════════════════════════════
+### 9. Refresh Token
+### ═══════════════════════════════════════════════════════════════════════
+
+### Exchange refresh token for new tokens
+POST {{baseUrl}}/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token&refresh_token=<paste-refresh-token>&client_id=interactive-dashboard

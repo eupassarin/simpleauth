@@ -6,12 +6,12 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v10.0": {
-      "SimpleAuth.Storage.EntityFramework/0.1.0": {
+      "SimpleAuth.Storage.EntityFramework/1.0.0": {
         "dependencies": {
           "Microsoft.EntityFrameworkCore": "10.0.8",
           "Microsoft.EntityFrameworkCore.Relational": "10.0.8",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.8",
-          "SimpleAuth.Storage.Abstractions": "0.1.0"
+          "SimpleAuth.Storage.Abstractions": "1.0.0"
         },
         "runtime": {
           "SimpleAuth.Storage.EntityFramework.dll": {}
@@ -152,18 +152,18 @@
           }
         }
       },
-      "SimpleAuth.Storage.Abstractions/0.1.0": {
+      "SimpleAuth.Storage.Abstractions/1.0.0": {
         "runtime": {
           "SimpleAuth.Storage.Abstractions.dll": {
-            "assemblyVersion": "0.1.0.0",
-            "fileVersion": "0.1.0.0"
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
           }
         }
       }
     }
   },
   "libraries": {
-    "SimpleAuth.Storage.EntityFramework/0.1.0": {
+    "SimpleAuth.Storage.EntityFramework/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -252,7 +252,7 @@
       "path": "microsoft.extensions.primitives/10.0.8",
       "hashPath": "microsoft.extensions.primitives.10.0.8.nupkg.sha512"
     },
-    "SimpleAuth.Storage.Abstractions/0.1.0": {
+    "SimpleAuth.Storage.Abstractions/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

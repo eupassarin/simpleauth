@@ -68,6 +68,9 @@ internal sealed class EfSigningKeyStore : ISigningKeyStore
 
     public async Task SetPrimaryAsync(string keyId, CancellationToken cancellationToken = default)
     {
+        // Use a transaction to prevent race conditions during concurrent key rotations.
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+
         // Demote all current primary keys, then promote the target.
         await _context.SigningKeys
             .Where(k => k.IsPrimary)
@@ -78,6 +81,8 @@ internal sealed class EfSigningKeyStore : ISigningKeyStore
             .Where(k => k.KeyId == keyId)
             .ExecuteUpdateAsync(setters => setters.SetProperty(k => k.IsPrimary, true), cancellationToken)
             .ConfigureAwait(false);
+
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task RemoveExpiredAsync(CancellationToken cancellationToken = default)

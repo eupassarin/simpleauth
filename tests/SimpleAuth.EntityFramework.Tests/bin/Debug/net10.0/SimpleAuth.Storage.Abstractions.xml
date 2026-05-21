@@ -613,6 +613,13 @@
         <member name="P:SimpleAuth.RefreshToken.Generation">
             <summary>Generation counter for token family (used to detect replay within a family).</summary>
         </member>
+        <member name="P:SimpleAuth.RefreshToken.DPopJkt">
+            <summary>
+            JWK thumbprint (RFC 7638) of the DPoP public key bound to this refresh token.
+            Non-null when the original grant used DPoP (RFC 9449 §10.1).
+            On refresh, the server MUST require a DPoP proof with a matching thumbprint.
+            </summary>
+        </member>
         <member name="T:SimpleAuth.IssuedToken">
             <summary>
             A record of an issued access token, used for revocation and introspection.
@@ -709,6 +716,9 @@
         </member>
         <member name="P:SimpleAuth.ParEntry.Nonce">
             <summary>Optional nonce bound to the ID token.</summary>
+        </member>
+        <member name="P:SimpleAuth.ParEntry.ResponseMode">
+            <summary>Optional response_mode (e.g., "query", "form_post").</summary>
         </member>
         <member name="P:SimpleAuth.ParEntry.CreatedAt">
             <summary>UTC time this PAR entry was created.</summary>

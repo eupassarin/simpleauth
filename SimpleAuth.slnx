@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/samples/">
     <Project Path="samples/SimpleAuth.Sample.Full/SimpleAuth.Sample.Full.csproj" />
+    <Project Path="samples/SimpleAuth.Sample.Interactive/SimpleAuth.Sample.Interactive.csproj" />
     <Project Path="samples/SimpleAuth.Sample.Minimal/SimpleAuth.Sample.Minimal.csproj" />
   </Folder>
   <Folder Name="/src/">

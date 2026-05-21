@@ -17,7 +17,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCopyrightAttribute("Copyright © SimpleAuth Contributors")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Storage store interfaces for SimpleAuth — zero dependencies.")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ce63c6e05ee6eb71ccff1e0f9ca8a48a7bb0b67f")]
 [assembly: System.Reflection.AssemblyProductAttribute("SimpleAuth")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SimpleAuth.Storage.Abstractions")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SimpleAuth.Sample.Full</name>
+    </assembly>
+    <members>
+        <member name="T:SimpleAuth.Sample.Full.AppDbContext">
+            <summary>
+            Application DbContext — derives from <see cref="T:SimpleAuth.EntityFramework.SimpleAuthDbContext"/> so that
+            all SimpleAuth tables are created alongside any application-specific tables.
+            </summary>
+        </member>
+        <member name="T:SimpleAuth.Sample.Full.AppDbContextFactory">
+            <summary>
+            Allows the EF Core tooling (<c>dotnet ef migrations add</c>) to instantiate
+            <see cref="T:SimpleAuth.Sample.Full.AppDbContext"/> at design time without running the application.
+            </summary>
+        </member>
+        <member name="T:SimpleAuth.Sample.Full.Migrations.Initial">
+            <inheritdoc />
+        </member>
+        <member name="M:SimpleAuth.Sample.Full.Migrations.Initial.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SimpleAuth.Sample.Full.Migrations.Initial.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SimpleAuth.Sample.Full.Migrations.Initial.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Program">
+            <summary>
+            Auto-generated public partial Program class for top-level statement apps.
+            </summary>
+        </member>
+    </members>
+</doc>

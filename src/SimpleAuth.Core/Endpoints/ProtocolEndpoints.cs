@@ -141,6 +141,11 @@ internal static class ProtocolTokenSupport
                 continue;
             }
 
+            if (credential.Expiration is DateTime exp && exp <= DateTime.UtcNow)
+            {
+                continue;
+            }
+
             if (SecretHasher.Verify(clientSecret, credential.Value))
             {
                 return true;
@@ -179,8 +184,8 @@ internal static class ProtocolTokenSupport
             return false;
         }
 
-        clientId = decoded[..separator];
-        clientSecret = decoded[(separator + 1)..];
+        clientId = Uri.UnescapeDataString(decoded[..separator]);
+        clientSecret = Uri.UnescapeDataString(decoded[(separator + 1)..]);
         return true;
     }
 }
@@ -334,9 +339,8 @@ internal static class UserInfoEndpoint
     /// <summary>Returns user claims based on the bearer token.</summary>
     internal static async Task HandleAsync(HttpContext context)
     {
-        // For DPoP-bound tokens the client may send the token via DPoP scheme.
-        // We need to accept both "Bearer" and "DPoP" schemes here.
-        string? rawToken = GetPresentedToken(context);
+        // For DPoP-bound tokens the client MUST send the token via DPoP scheme (RFC 9449 §7.1).
+        string? rawToken = GetPresentedToken(context, out string presentedScheme);
         if (string.IsNullOrWhiteSpace(rawToken))
         {
             await ProtocolTokenSupport.WriteErrorAsync(context, StatusCodes.Status401Unauthorized, "invalid_token", "a user access token is required.");
@@ -350,9 +354,16 @@ internal static class UserInfoEndpoint
             return;
         }
 
-        // RFC 9449 §7.1 — DPoP-bound tokens MUST be accompanied by a valid DPoP proof.
+        // RFC 9449 §7.1 — DPoP-bound tokens MUST be presented with the "DPoP" scheme.
         if (token.JktThumbprint is not null)
         {
+            if (!string.Equals(presentedScheme, "DPoP", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Response.Headers["WWW-Authenticate"] = "DPoP error=\"invalid_token\", error_description=\"DPoP-bound tokens must use the DPoP authorization scheme.\"";
+                await ProtocolTokenSupport.WriteErrorAsync(context, StatusCodes.Status401Unauthorized, "invalid_token", "DPoP-bound tokens must use the DPoP authorization scheme.");
+                return;
+            }
+
             string? dpopProof = context.Request.Headers["DPoP"].FirstOrDefault();
             if (string.IsNullOrWhiteSpace(dpopProof))
             {
@@ -434,9 +445,11 @@ internal static class UserInfoEndpoint
 
     /// <summary>
     /// Reads the raw access token string from the request, accepting both <c>Bearer</c> and <c>DPoP</c> schemes.
+    /// Outputs the scheme used so callers can enforce DPoP scheme requirement (RFC 9449 §7.1).
     /// </summary>
-    private static string? GetPresentedToken(HttpContext context)
+    private static string? GetPresentedToken(HttpContext context, out string scheme)
     {
+        scheme = string.Empty;
         string? auth = context.Request.Headers.Authorization.ToString();
         if (string.IsNullOrWhiteSpace(auth))
         {
@@ -445,11 +458,13 @@ internal static class UserInfoEndpoint
 
         if (auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
+            scheme = "Bearer";
             return auth[7..].Trim();
         }
 
         if (auth.StartsWith("DPoP ", StringComparison.OrdinalIgnoreCase))
         {
+            scheme = "DPoP";
             return auth[5..].Trim();
         }
 
@@ -548,14 +563,18 @@ internal static class RevocationEndpoint
             return;
         }
 
+        // RFC 7009 §2.1: The server responds with 200 for both successful revocation
+        // and invalid/unowned tokens — MUST NOT reveal token ownership to other clients.
         string hint = form["token_type_hint"].ToString();
         if (string.Equals(hint, "refresh_token", StringComparison.Ordinal))
         {
             IRefreshTokenStore refreshTokenStore = context.RequestServices.GetRequiredService<IRefreshTokenStore>();
             RefreshToken? refreshToken = await refreshTokenStore.FindByHandleAsync(tokenValue, context.RequestAborted);
-            if (refreshToken is not null && !string.Equals(refreshToken.ClientId, callerClientId, StringComparison.Ordinal))
+            if (refreshToken is null || !string.Equals(refreshToken.ClientId, callerClientId, StringComparison.Ordinal))
             {
-                await ProtocolTokenSupport.WriteErrorAsync(context, StatusCodes.Status401Unauthorized, "invalid_client", "token does not belong to this client.");
+                // Token not found or belongs to another client — silently return 200.
+                context.Response.StatusCode = StatusCodes.Status200OK;
+                await context.Response.CompleteAsync();
                 return;
             }
 
@@ -565,9 +584,11 @@ internal static class RevocationEndpoint
         {
             ITokenStore tokenStore = context.RequestServices.GetRequiredService<ITokenStore>();
             IssuedToken? issuedToken = await tokenStore.FindByHandleAsync(tokenValue, context.RequestAborted);
-            if (issuedToken is not null && !string.Equals(issuedToken.ClientId, callerClientId, StringComparison.Ordinal))
+            if (issuedToken is null || !string.Equals(issuedToken.ClientId, callerClientId, StringComparison.Ordinal))
             {
-                await ProtocolTokenSupport.WriteErrorAsync(context, StatusCodes.Status401Unauthorized, "invalid_client", "token does not belong to this client.");
+                // Token not found or belongs to another client — silently return 200.
+                context.Response.StatusCode = StatusCodes.Status200OK;
+                await context.Response.CompleteAsync();
                 return;
             }
 
@@ -635,14 +656,29 @@ internal static class EndSessionEndpoint
             await tokenStore.RevokeAllAsync(subjectId, clientId, context.RequestAborted);
         }
 
-        if (!string.IsNullOrWhiteSpace(postLogoutRedirectUri))
+        // OIDC RP-Initiated Logout §2.1: post_logout_redirect_uri MUST be validated
+        // against the client's registered URIs to prevent open redirect attacks.
+        if (!string.IsNullOrWhiteSpace(postLogoutRedirectUri) && !string.IsNullOrWhiteSpace(clientId))
         {
-            string redirectTarget = string.IsNullOrWhiteSpace(state)
-                ? postLogoutRedirectUri
-                : $"{postLogoutRedirectUri}?state={Uri.EscapeDataString(state)}";
+            IClientStore clientStore = context.RequestServices.GetRequiredService<IClientStore>();
+            Client? client = await clientStore.FindByClientIdAsync(clientId, context.RequestAborted);
 
-            context.Response.Redirect(redirectTarget);
-            return;
+            if (client?.PostLogoutRedirectUris?.Contains(postLogoutRedirectUri) == true)
+            {
+                string redirectTarget;
+                if (string.IsNullOrWhiteSpace(state))
+                {
+                    redirectTarget = postLogoutRedirectUri;
+                }
+                else
+                {
+                    char separator = postLogoutRedirectUri.Contains('?') ? '&' : '?';
+                    redirectTarget = $"{postLogoutRedirectUri}{separator}state={Uri.EscapeDataString(state)}";
+                }
+
+                context.Response.Redirect(redirectTarget);
+                return;
+            }
         }
 
         context.Response.StatusCode = StatusCodes.Status200OK;

@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>SimpleAuth — Interactive Dashboard</title>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #232733;
+            --border: #2d3248;
+            --text: #e4e4e7;
+            --text2: #a1a1aa;
+            --accent: #3b82f6;
+            --accent2: #60a5fa;
+            --success: #22c55e;
+            --warning: #eab308;
+            --error: #ef4444;
+            --code-bg: #1e2030;
+            --radius: 8px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+        
+        /* Layout */
+        .app { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); padding: 1rem 0; position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; }
+        .main { flex: 1; margin-left: 260px; padding: 2rem; max-width: 1000px; }
+        
+        /* Sidebar */
+        .sidebar h1 { font-size: 1.1rem; padding: 0.5rem 1.25rem 1rem; color: var(--accent2); display: flex; align-items: center; gap: 0.5rem; }
+        .sidebar h1 span { font-size: 1.3rem; }
+        .nav-item { display: block; padding: 0.5rem 1.25rem; color: var(--text2); text-decoration: none; font-size: 0.875rem; cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent; }
+        .nav-item:hover { background: var(--surface2); color: var(--text); }
+        .nav-item.active { background: var(--surface2); color: var(--accent2); border-left-color: var(--accent); }
+        .nav-item .emoji { margin-right: 0.5rem; }
+        .nav-section { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text2); padding: 1rem 1.25rem 0.25rem; font-weight: 600; }
+        
+        /* Content */
+        .section { display: none; }
+        .section.active { display: block; }
+        .section h2 { font-size: 1.5rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .section .desc { color: var(--text2); margin-bottom: 1.5rem; font-size: 0.9rem; }
+        
+        /* Cards */
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+        .card h3 { font-size: 0.95rem; margin-bottom: 0.75rem; color: var(--accent2); }
+        
+        /* Forms */
+        .form-row { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; align-items: end; flex-wrap: wrap; }
+        .form-group { display: flex; flex-direction: column; flex: 1; min-width: 200px; }
+        .form-group label { font-size: 0.75rem; color: var(--text2); margin-bottom: 0.25rem; font-weight: 500; }
+        input, select { background: var(--code-bg); border: 1px solid var(--border); border-radius: 4px; padding: 0.5rem 0.75rem; color: var(--text); font-size: 0.875rem; font-family: inherit; width: 100%; }
+        input:focus, select:focus { outline: none; border-color: var(--accent); }
+        
+        /* Buttons */
+        .btn { padding: 0.5rem 1rem; border: none; border-radius: 4px; font-size: 0.875rem; cursor: pointer; font-weight: 500; transition: all 0.15s; display: inline-flex; align-items: center; gap: 0.4rem; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent2); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-warning { background: var(--warning); color: black; }
+        .btn-danger { background: var(--error); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent2); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* Code/Output */
+        .output { background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8rem; overflow-x: auto; white-space: pre-wrap; word-break: break-all; max-height: 400px; overflow-y: auto; margin-top: 0.75rem; }
+        .output:empty { display: none; }
+        .output .key { color: var(--accent2); }
+        .output .string { color: var(--success); }
+        .output .number { color: var(--warning); }
+        .output .bool { color: #c084fc; }
+        
+        /* Steps */
+        .steps { counter-reset: step; }
+        .step { position: relative; padding-left: 2.5rem; margin-bottom: 1.25rem; }
+        .step::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0; width: 1.75rem; height: 1.75rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: var(--text2); }
+        .step.done::before { background: var(--success); border-color: var(--success); color: white; }
+        .step.active::before { background: var(--accent); border-color: var(--accent); color: white; }
+        .step h4 { font-size: 0.9rem; margin-bottom: 0.25rem; }
+        .step p { font-size: 0.8rem; color: var(--text2); }
+        
+        /* Badges */
+        .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600; }
+        .badge-success { background: rgba(34,197,94,0.15); color: var(--success); }
+        .badge-info { background: rgba(59,130,246,0.15); color: var(--accent2); }
+        .badge-warning { background: rgba(234,179,8,0.15); color: var(--warning); }
+        
+        /* Log panel */
+        .log-panel { position: fixed; bottom: 0; left: 260px; right: 0; height: 200px; background: var(--surface); border-top: 1px solid var(--border); transform: translateY(100%); transition: transform 0.3s; z-index: 100; display: flex; flex-direction: column; }
+        .log-panel.open { transform: translateY(0); }
+        .log-header { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; border-bottom: 1px solid var(--border); }
+        .log-header h4 { font-size: 0.8rem; color: var(--text2); }
+        .log-body { flex: 1; overflow-y: auto; padding: 0.5rem 1rem; font-family: monospace; font-size: 0.75rem; }
+        .log-entry { margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+        .log-entry .method { color: var(--accent2); font-weight: 600; }
+        .log-entry .url { color: var(--text); }
+        .log-entry .status-ok { color: var(--success); }
+        .log-entry .status-err { color: var(--error); }
+        .log-toggle { position: fixed; bottom: 1rem; right: 1rem; z-index: 101; }
+        
+        /* Token display */
+        .token-parts { display: flex; flex-direction: column; gap: 0.5rem; }
+        .token-part { padding: 0.5rem; border-radius: 4px; }
+        .token-header { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); }
+        .token-payload { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); }
+        .token-sig { background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.3); }
+        
+        .main.log-open { padding-bottom: 220px; }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+            .log-panel { left: 0; }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <nav class="sidebar">
+        <h1><span>⚡</span> SimpleAuth</h1>
+        <div class="nav-section">Discovery</div>
+        <a class="nav-item active" data-section="discovery"><span class="emoji">🔍</span>Discovery & JWKS</a>
+        <div class="nav-section">Token Flows</div>
+        <a class="nav-item" data-section="authcode"><span class="emoji">🔐</span>Authorization Code</a>
+        <a class="nav-item" data-section="clientcreds"><span class="emoji">🤖</span>Client Credentials</a>
+        <a class="nav-item" data-section="refresh"><span class="emoji">🔄</span>Refresh Token</a>
+        <div class="nav-section">Endpoints</div>
+        <a class="nav-item" data-section="userinfo"><span class="emoji">👤</span>UserInfo</a>
+        <a class="nav-item" data-section="introspection"><span class="emoji">🔎</span>Introspection</a>
+        <a class="nav-item" data-section="revocation"><span class="emoji">🗑️</span>Revocation</a>
+        <div class="nav-section">Security</div>
+        <a class="nav-item" data-section="dpop"><span class="emoji">🛡️</span>DPoP</a>
+        <a class="nav-item" data-section="par"><span class="emoji">📨</span>PAR</a>
+        <div class="nav-section">Response Modes</div>
+        <a class="nav-item" data-section="formpost"><span class="emoji">📄</span>Form Post</a>
+        <div class="nav-section">Session</div>
+        <a class="nav-item" data-section="endsession"><span class="emoji">🚪</span>End Session</a>
+        <a class="nav-item" data-section="prompt"><span class="emoji">⚡</span>prompt=none</a>
+    </nav>
+
+    <main class="main" id="main-content">
+        <!-- ═══════════════════ DISCOVERY ═══════════════════ -->
+        <div class="section active" id="sec-discovery">
+            <h2>🔍 Discovery & JWKS</h2>
+            <p class="desc">OpenID Connect Discovery 1.0 — server metadata and public keys.</p>
+            
+            <div class="card">
+                <h3>Discovery Document</h3>
+                <p style="font-size:0.8rem;color:var(--text2);margin-bottom:0.75rem">
+                    GET <code>/.well-known/openid-configuration</code> — Advertises all endpoints, supported features, algorithms.
+                </p>
+                <button class="btn btn-primary" onclick="fetchDiscovery()">Fetch Discovery</button>
+                <div class="output" id="discovery-output"></div>
+            </div>
+            
+            <div class="card">
+                <h3>JSON Web Key Set (JWKS)</h3>
+                <p style="font-size:0.8rem;color:var(--text2);margin-bottom:0.75rem">
+                    GET <code>/.well-known/jwks.json</code> — Public keys used to verify token signatures.
+                </p>
+                <button class="btn btn-primary" onclick="fetchJwks()">Fetch JWKS</button>
+                <div class="output" id="jwks-output"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ AUTHORIZATION CODE ═══════════════════ -->
+        <div class="section" id="sec-authcode">
+            <h2>🔐 Authorization Code + PKCE</h2>
+            <p class="desc">Full OAuth 2.1 authorization code flow with PKCE (S256). Includes login, consent, and token exchange.</p>
+            
+            <div class="card">
+                <h3>Flow Configuration</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Client ID</label>
+                        <input id="ac-client-id" value="interactive-dashboard" readonly/>
+                    </div>
+                    <div class="form-group">
+                        <label>Scopes</label>
+                        <input id="ac-scope" value="openid profile email offline_access api"/>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Redirect URI</label>
+                        <input id="ac-redirect" value="https://localhost:5001/callback" readonly/>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card steps">
+                <h3>Steps</h3>
+                <div class="step" id="ac-step1">
+                    <h4>Generate PKCE</h4>
+                    <p>Create code_verifier (random 43 chars) and code_challenge (SHA-256 of verifier, base64url).</p>
+                    <button class="btn btn-primary" onclick="generatePkce()" style="margin-top:0.5rem">Generate PKCE</button>
+                    <div class="output" id="ac-pkce-output"></div>
+                </div>
+                <div class="step" id="ac-step2">
+                    <h4>Start Authorization</h4>
+                    <p>Redirect to /connect/authorize with parameters. Opens login → consent → callback.</p>
+                    <button class="btn btn-primary" onclick="startAuthCode()" style="margin-top:0.5rem" id="ac-start-btn" disabled>Start Flow</button>
+                    <div class="output" id="ac-authorize-url"></div>
+                </div>
+                <div class="step" id="ac-step3">
+                    <h4>Exchange Code for Tokens</h4>
+                    <p>POST /connect/token with the authorization code + code_verifier.</p>
+                    <div class="output" id="ac-code-output"></div>
+                    <button class="btn btn-success" onclick="exchangeCode()" style="margin-top:0.5rem" id="ac-exchange-btn" disabled>Exchange Code</button>
+                </div>
+                <div class="step" id="ac-step4">
+                    <h4>Token Response</h4>
+                    <p>Decoded ID token and access token.</p>
+                    <div class="output" id="ac-token-output"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ CLIENT CREDENTIALS ═══════════════════ -->
+        <div class="section" id="sec-clientcreds">
+            <h2>🤖 Client Credentials</h2>
+            <p class="desc">Machine-to-machine token issuance. No user involved — the client authenticates directly.</p>
+            
+            <div class="card">
+                <h3>Request</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Client ID</label>
+                        <input id="cc-client-id" value="m2m-demo"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Client Secret</label>
+                        <input id="cc-secret" value="demo-secret" type="password"/>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Scope</label>
+                        <input id="cc-scope" value="api"/>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="clientCredentials()">Get Token</button>
+                <div class="output" id="cc-output"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ REFRESH TOKEN ═══════════════════ -->
+        <div class="section" id="sec-refresh">
+            <h2>🔄 Refresh Token</h2>
+            <p class="desc">Exchange a refresh token for new access + refresh tokens. Demonstrates token rotation.</p>
+            
+            <div class="card">
+                <h3>Refresh Token Exchange</h3>
+                <p style="font-size:0.8rem;color:var(--text2);margin-bottom:0.75rem">
+                    First complete the Authorization Code flow to obtain a refresh token.
+                </p>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Refresh Token</label>
+                        <input id="rt-token" placeholder="Complete auth code flow first..."/>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="refreshToken()" id="rt-btn">Refresh</button>
+                <div class="output" id="rt-output"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ USERINFO ═══════════════════ -->
+        <div class="section" id="sec-userinfo">
+            <h2>👤 UserInfo</h2>
+            <p class="desc">OIDC UserInfo endpoint — returns user claims based on granted scopes.</p>
+            
+            <div class="card">
+                <h3>GET /connect/userinfo</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Access Token</label>
+                        <input id="ui-token" placeholder="Complete auth code flow first..."/>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="getUserInfo()">Get UserInfo</button>
+                <div class="output" id="ui-output"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ INTROSPECTION ═══════════════════ -->
+        <div class="section" id="sec-introspection">
+            <h2>🔎 Token Introspection</h2>
+            <p class="desc">RFC 7662 — Resource server checks if a token is active and gets its metadata.</p>
+            
+            <div class="card">
+                <h3>POST /connect/introspect</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Token to Introspect</label>
+                        <input id="intro-token" placeholder="Any access or refresh token..."/>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Client ID (caller)</label>
+                        <input id="intro-client" value="resource-server"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Client Secret</label>
+                        <input id="intro-secret" value="resource-secret" type="password"/>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="introspect()">Introspect</button>
+                <div class="output" id="intro-output"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ REVOCATION ═══════════════════ -->
+        <div class="section" id="sec-revocation">
+            <h2>🗑️ Token Revocation</h2>
+            <p class="desc">RFC 7009 — Revoke an access or refresh token. Always returns 200 (even if token is unknown).</p>
+            
+            <div class="card">
+                <h3>POST /connect/revocation</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Token to Revoke</label>
+                        <input id="rev-token" placeholder="Any token..."/>
+                    </div>
+                    <div class="form-group">
+                        <label>Token Type Hint</label>
+                        <select id="rev-hint">
+                            <option value="">auto-detect</option>
+                            <option value="access_token">access_token</option>
+                            <option value="refresh_token">refresh_token</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Client ID</label>
+                        <input id="rev-client" value="resource-server"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Client Secret</label>
+                        <input id="rev-secret" value="resource-secret" type="password"/>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="revokeToken()">Revoke</button>
+                <button class="btn btn-outline" onclick="introspectAfterRevoke()" style="margin-left:0.5rem">Verify (Introspect)</button>
+                <div class="output" id="rev-output"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ DPoP ═══════════════════ -->
+        <div class="section" id="sec-dpop">
+            <h2>🛡️ DPoP (Proof-of-Possession)</h2>
+            <p class="desc">RFC 9449 — Bind tokens to a client's cryptographic key. Prevents token theft/replay.</p>
+            
+            <div class="card steps">
+                <h3>DPoP Flow</h3>
+                <div class="step" id="dpop-step1">
+                    <h4>Generate EC P-256 Key Pair</h4>
+                    <p>Uses Web Crypto API to create an ephemeral signing key in the browser.</p>
+                    <button class="btn btn-primary" onclick="generateDpopKey()" style="margin-top:0.5rem">Generate Key</button>
+                    <div class="output" id="dpop-key-output"></div>
+                </div>
+                <div class="step" id="dpop-step2">
+                    <h4>Create DPoP Proof JWT</h4>
+                    <p>Sign a proof JWT with htm, htu, iat, jti claims.</p>
+                    <button class="btn btn-primary" onclick="createDpopProof()" style="margin-top:0.5rem" id="dpop-proof-btn" disabled>Create Proof</button>
+                    <div class="output" id="dpop-proof-output"></div>
+                </div>
+                <div class="step" id="dpop-step3">
+                    <h4>Request Token with DPoP</h4>
+                    <p>POST /connect/token with DPoP header. Token will be bound to the key (cnf.jkt).</p>
+                    <button class="btn btn-success" onclick="dpopTokenRequest()" style="margin-top:0.5rem" id="dpop-token-btn" disabled>Get DPoP-Bound Token</button>
+                    <div class="output" id="dpop-token-output"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ PAR ═══════════════════ -->
+        <div class="section" id="sec-par">
+            <h2>📨 PAR (Pushed Authorization Request)</h2>
+            <p class="desc">RFC 9126 — Push authorization parameters to the server first, then redirect with a request_uri.</p>
+            
+            <div class="card steps">
+                <h3>PAR Flow</h3>
+                <div class="step" id="par-step1">
+                    <h4>Push Authorization Request</h4>
+                    <p>POST /connect/par with all authorize parameters. Server returns a request_uri.</p>
+                    <button class="btn btn-primary" onclick="pushAuthRequest()" style="margin-top:0.5rem">Push Request</button>
+                    <div class="output" id="par-push-output"></div>
+                </div>
+                <div class="step" id="par-step2">
+                    <h4>Redirect with request_uri</h4>
+                    <p>Open /connect/authorize?client_id=...&request_uri=... (parameters are loaded server-side).</p>
+                    <button class="btn btn-success" onclick="parAuthorize()" style="margin-top:0.5rem" id="par-auth-btn" disabled>Authorize with PAR</button>
+                    <div class="output" id="par-auth-output"></div>
+                </div>
+                <div class="step" id="par-step3">
+                    <h4>Exchange Code</h4>
+                    <p>Same token exchange as normal auth code flow.</p>
+                    <div class="output" id="par-token-output"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ FORM POST ═══════════════════ -->
+        <div class="section" id="sec-formpost">
+            <h2>📄 Form Post Response Mode</h2>
+            <p class="desc">OAuth 2.0 Form Post Response Mode — authorization response delivered via HTML form POST instead of query redirect.</p>
+            
+            <div class="card">
+                <h3>Start Authorization with response_mode=form_post</h3>
+                <p style="font-size:0.8rem;color:var(--text2);margin-bottom:0.75rem">
+                    The server returns an auto-submitting HTML form that POSTs the code to the redirect_uri.
+                </p>
+                <button class="btn btn-primary" onclick="startFormPost()">Start Form Post Flow</button>
+                <div class="output" id="fp-output"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ END SESSION ═══════════════════ -->
+        <div class="section" id="sec-endsession">
+            <h2>🚪 End Session (Logout)</h2>
+            <p class="desc">OIDC RP-Initiated Logout — terminates the user session and optionally redirects.</p>
+            
+            <div class="card">
+                <h3>GET /connect/endsession</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ID Token Hint (optional)</label>
+                        <input id="es-id-token" placeholder="ID token from login..."/>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Post-Logout Redirect URI</label>
+                        <input id="es-redirect" value="https://localhost:5001/"/>
+                    </div>
+                </div>
+                <button class="btn btn-danger" onclick="endSession()">Logout</button>
+                <div class="output" id="es-output"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ PROMPT=NONE ═══════════════════ -->
+        <div class="section" id="sec-prompt">
+            <h2>⚡ prompt=none (Silent Auth)</h2>
+            <p class="desc">OIDC §3.1.2.1 — Check if user is already authenticated without showing UI. Returns login_required if not.</p>
+            
+            <div class="card">
+                <h3>Silent Authentication Check</h3>
+                <p style="font-size:0.8rem;color:var(--text2);margin-bottom:0.75rem">
+                    Adds <code>prompt=none</code> to the authorize request. If user has an active session, returns a code silently. Otherwise returns <code>login_required</code> error.
+                </p>
+                <button class="btn btn-primary" onclick="promptNone()">Try prompt=none</button>
+                <div class="output" id="prompt-output"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Log Panel -->
+<div class="log-panel" id="log-panel">
+    <div class="log-header">
+        <h4>📋 HTTP Log</h4>
+        <button class="btn btn-outline" onclick="clearLog()" style="padding:0.25rem 0.5rem;font-size:0.7rem">Clear</button>
+    </div>
+    <div class="log-body" id="log-body"></div>
+</div>
+<button class="btn btn-outline log-toggle" onclick="toggleLog()">📋 Log</button>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════════════════════════════════════════
+const BASE = '';  // Same origin
+const state = {
+    codeVerifier: null,
+    codeChallenge: null,
+    authCode: null,
+    accessToken: null,
+    refreshToken: null,
+    idToken: null,
+    dpopKey: null,
+    dpopJwk: null,
+    parRequestUri: null,
+    parCodeVerifier: null,
+    parCodeChallenge: null,
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Navigation
+// ═══════════════════════════════════════════════════════════════════════════════
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        item.classList.add('active');
+        document.getElementById('sec-' + item.dataset.section).classList.add('active');
+    });
+});
+
+// Handle callback from popup or hash
+window.addEventListener('message', (e) => {
+    if (e.data.type === 'auth-callback' || e.data.type === 'form-post-callback') {
+        handleCallback(e.data.code, e.data.state);
+    }
+});
+
+// Check hash on load (for inline callback)
+if (window.location.hash.startsWith('#callback')) {
+    const params = new URLSearchParams(window.location.hash.substring('#callback?'.length));
+    const code = params.get('code');
+    if (code) {
+        setTimeout(() => handleCallback(code, params.get('state')), 100);
+    }
+    history.replaceState(null, '', '/');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HTTP Helper with Logging
+// ═══════════════════════════════════════════════════════════════════════════════
+async function api(method, url, body, headers = {}) {
+    const fullUrl = url.startsWith('http') ? url : BASE + url;
+    const opts = { method, headers: { ...headers } };
+    if (body && typeof body === 'string') {
+        opts.body = body;
+        if (!opts.headers['Content-Type']) opts.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    }
+    
+    const start = performance.now();
+    const resp = await fetch(fullUrl, opts);
+    const elapsed = Math.round(performance.now() - start);
+    
+    let data;
+    const ct = resp.headers.get('content-type') || '';
+    if (ct.includes('json')) {
+        data = await resp.json();
+    } else {
+        data = await resp.text();
+    }
+    
+    logRequest(method, url, resp.status, elapsed, body, data);
+    return { status: resp.status, data, headers: resp.headers };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Log Panel
+// ═══════════════════════════════════════════════════════════════════════════════
+function logRequest(method, url, status, elapsed, reqBody, resBody) {
+    const log = document.getElementById('log-body');
+    const statusClass = status < 400 ? 'status-ok' : 'status-err';
+    const bodyPreview = typeof resBody === 'object' ? JSON.stringify(resBody).substring(0, 200) : (resBody || '').substring(0, 200);
+    
+    log.innerHTML = `<div class="log-entry"><span class="method">${method}</span> <span class="url">${url}</span> → <span class="${statusClass}">${status}</span> <span style="color:var(--text2)">(${elapsed}ms)</span>${reqBody ? `\n<span style="color:var(--text2)">↑ ${reqBody.substring(0, 150)}</span>` : ''}\n<span style="color:var(--text2)">↓ ${bodyPreview}</span></div>` + log.innerHTML;
+}
+
+function toggleLog() {
+    const panel = document.getElementById('log-panel');
+    panel.classList.toggle('open');
+    document.getElementById('main-content').classList.toggle('log-open');
+}
+function clearLog() { document.getElementById('log-body').innerHTML = ''; }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Utility
+// ═══════════════════════════════════════════════════════════════════════════════
+function b64url(buffer) {
+    return btoa(String.fromCharCode(...new Uint8Array(buffer)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function b64urlDecode(str) {
+    str = str.replace(/-/g, '+').replace(/_/g, '/');
+    while (str.length % 4) str += '=';
+    return JSON.parse(atob(str));
+}
+function decodeJwt(token) {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    return { header: b64urlDecode(parts[0]), payload: b64urlDecode(parts[1]) };
+}
+function pretty(obj) { return JSON.stringify(obj, null, 2); }
+function syntaxHighlight(json) {
+    if (typeof json !== 'string') json = JSON.stringify(json, null, 2);
+    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
+        let cls = 'number';
+        if (/^"/.test(match)) { cls = /:$/.test(match) ? 'key' : 'string'; }
+        else if (/true|false/.test(match)) { cls = 'bool'; }
+        return `<span class="${cls}">${match}</span>`;
+    });
+}
+function showOutput(id, data) {
+    const el = document.getElementById(id);
+    el.innerHTML = typeof data === 'string' ? data : syntaxHighlight(pretty(data));
+}
+function randomString(len) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    let result = '';
+    const values = crypto.getRandomValues(new Uint8Array(len));
+    for (let i = 0; i < len; i++) result += chars[values[i] % chars.length];
+    return result;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 1. DISCOVERY
+// ═══════════════════════════════════════════════════════════════════════════════
+async function fetchDiscovery() {
+    const { data } = await api('GET', '/.well-known/openid-configuration');
+    showOutput('discovery-output', data);
+}
+async function fetchJwks() {
+    const { data } = await api('GET', '/.well-known/jwks.json');
+    showOutput('jwks-output', data);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 2. AUTHORIZATION CODE + PKCE
+// ═══════════════════════════════════════════════════════════════════════════════
+async function generatePkce() {
+    state.codeVerifier = randomString(43);
+    const encoder = new TextEncoder();
+    const hash = await crypto.subtle.digest('SHA-256', encoder.encode(state.codeVerifier));
+    state.codeChallenge = b64url(hash);
+    
+    showOutput('ac-pkce-output', {
+        code_verifier: state.codeVerifier,
+        code_challenge: state.codeChallenge,
+        code_challenge_method: 'S256'
+    });
+    
+    document.getElementById('ac-step1').classList.add('done');
+    document.getElementById('ac-start-btn').disabled = false;
+}
+
+function startAuthCode() {
+    const clientId = document.getElementById('ac-client-id').value;
+    const scope = document.getElementById('ac-scope').value;
+    const redirectUri = document.getElementById('ac-redirect').value;
+    const authState = randomString(16);
+    
+    const url = `/connect/authorize?response_type=code&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${authState}&code_challenge=${state.codeChallenge}&code_challenge_method=S256`;
+    
+    showOutput('ac-authorize-url', `URL: ${url}\n\nOpening in popup...`);
+    document.getElementById('ac-step2').classList.add('active');
+    
+    // Store state for verification
+    state.authState = authState;
+    
+    // Open in popup
+    window.open(url, 'simpleauth-login', 'width=500,height=600,left=200,top=100');
+}
+
+function handleCallback(code, returnedState) {
+    state.authCode = code;
+    document.getElementById('ac-step2').classList.add('done');
+    document.getElementById('ac-step3').classList.add('active');
+    
+    showOutput('ac-code-output', {
+        authorization_code: code,
+        state: returnedState,
+        state_matches: returnedState === state.authState || returnedState === state.parState
+    });
+    
+    document.getElementById('ac-exchange-btn').disabled = false;
+    
+    // Navigate to authcode section
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelector('[data-section="authcode"]').classList.add('active');
+    document.getElementById('sec-authcode').classList.add('active');
+}
+
+async function exchangeCode() {
+    const clientId = document.getElementById('ac-client-id').value;
+    const redirectUri = document.getElementById('ac-redirect').value;
+    
+    const body = `grant_type=authorization_code&code=${encodeURIComponent(state.authCode)}&redirect_uri=${encodeURIComponent(redirectUri)}&client_id=${encodeURIComponent(clientId)}&code_verifier=${encodeURIComponent(state.codeVerifier)}`;
+    
+    const { data } = await api('POST', '/connect/token', body);
+    
+    if (data.access_token) {
+        state.accessToken = data.access_token;
+        state.refreshToken = data.refresh_token;
+        state.idToken = data.id_token;
+        
+        document.getElementById('ac-step3').classList.add('done');
+        document.getElementById('ac-step4').classList.add('done');
+        
+        // Decode ID token
+        const decoded = decodeJwt(data.id_token);
+        let output = `<strong>Token Response:</strong>\n${syntaxHighlight(pretty(data))}\n\n`;
+        if (decoded) {
+            output += `<strong>ID Token (decoded):</strong>\n<div class="token-part token-header">${syntaxHighlight(pretty(decoded.header))}</div>\n<div class="token-part token-payload">${syntaxHighlight(pretty(decoded.payload))}</div>`;
+        }
+        document.getElementById('ac-token-output').innerHTML = output;
+        
+        // Populate other sections
+        document.getElementById('rt-token').value = data.refresh_token || '';
+        document.getElementById('ui-token').value = data.access_token || '';
+        document.getElementById('intro-token').value = data.access_token || '';
+        document.getElementById('rev-token').value = data.access_token || '';
+        document.getElementById('es-id-token').value = data.id_token || '';
+    } else {
+        showOutput('ac-token-output', data);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 3. CLIENT CREDENTIALS
+// ═══════════════════════════════════════════════════════════════════════════════
+async function clientCredentials() {
+    const clientId = document.getElementById('cc-client-id').value;
+    const secret = document.getElementById('cc-secret').value;
+    const scope = document.getElementById('cc-scope').value;
+    
+    const body = `grant_type=client_credentials&scope=${encodeURIComponent(scope)}`;
+    const auth = btoa(`${clientId}:${secret}`);
+    
+    const { data } = await api('POST', '/connect/token', body, { 'Authorization': `Basic ${auth}` });
+    
+    if (data.access_token) {
+        const decoded = decodeJwt(data.access_token);
+        let output = `<strong>Token Response:</strong>\n${syntaxHighlight(pretty(data))}\n\n`;
+        if (decoded) {
+            output += `<strong>Access Token (JWT decoded):</strong>\n<div class="token-part token-header">${syntaxHighlight(pretty(decoded.header))}</div>\n<div class="token-part token-payload">${syntaxHighlight(pretty(decoded.payload))}</div>`;
+        }
+        document.getElementById('cc-output').innerHTML = output;
+    } else {
+        showOutput('cc-output', data);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 4. REFRESH TOKEN
+// ═══════════════════════════════════════════════════════════════════════════════
+async function refreshToken() {
+    const rt = document.getElementById('rt-token').value;
+    if (!rt) { showOutput('rt-output', { error: 'No refresh token available. Complete auth code flow first.' }); return; }
+    
+    const body = `grant_type=refresh_token&refresh_token=${encodeURIComponent(rt)}&client_id=interactive-dashboard`;
+    const { data } = await api('POST', '/connect/token', body);
+    
+    if (data.access_token) {
+        state.accessToken = data.access_token;
+        if (data.refresh_token) {
+            state.refreshToken = data.refresh_token;
+            document.getElementById('rt-token').value = data.refresh_token;
+        }
+        document.getElementById('ui-token').value = data.access_token;
+        document.getElementById('intro-token').value = data.access_token;
+        
+        let output = `<strong>New Tokens (rotation):</strong>\n${syntaxHighlight(pretty(data))}\n\n`;
+        output += `<span class="badge badge-success">✓ Token rotated</span> Old refresh token is now invalid.`;
+        document.getElementById('rt-output').innerHTML = output;
+    } else {
+        showOutput('rt-output', data);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 5. USERINFO
+// ═══════════════════════════════════════════════════════════════════════════════
+async function getUserInfo() {
+    const token = document.getElementById('ui-token').value;
+    if (!token) { showOutput('ui-output', { error: 'No access token. Complete auth code flow first.' }); return; }
+    
+    const { data } = await api('GET', '/connect/userinfo', null, { 'Authorization': `Bearer ${token}` });
+    showOutput('ui-output', data);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 6. INTROSPECTION
+// ═══════════════════════════════════════════════════════════════════════════════
+async function introspect() {
+    const token = document.getElementById('intro-token').value;
+    const clientId = document.getElementById('intro-client').value;
+    const secret = document.getElementById('intro-secret').value;
+    
+    const body = `token=${encodeURIComponent(token)}`;
+    const auth = btoa(`${clientId}:${secret}`);
+    
+    const { data } = await api('POST', '/connect/introspect', body, { 'Authorization': `Basic ${auth}` });
+    
+    let output = syntaxHighlight(pretty(data));
+    if (data.active) {
+        output = `<span class="badge badge-success">✓ ACTIVE</span>\n\n` + output;
+    } else {
+        output = `<span class="badge badge-warning">✗ INACTIVE</span>\n\n` + output;
+    }
+    document.getElementById('intro-output').innerHTML = output;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 7. REVOCATION
+// ═══════════════════════════════════════════════════════════════════════════════
+async function revokeToken() {
+    const token = document.getElementById('rev-token').value;
+    const hint = document.getElementById('rev-hint').value;
+    const clientId = document.getElementById('rev-client').value;
+    const secret = document.getElementById('rev-secret').value;
+    
+    let body = `token=${encodeURIComponent(token)}`;
+    if (hint) body += `&token_type_hint=${hint}`;
+    
+    const auth = btoa(`${clientId}:${secret}`);
+    const { status } = await api('POST', '/connect/revocation', body, { 'Authorization': `Basic ${auth}` });
+    
+    document.getElementById('rev-output').innerHTML = status === 200
+        ? `<span class="badge badge-success">✓ 200 OK</span> Token revoked (or was already invalid). Per RFC 7009, response is always 200.`
+        : `<span class="badge badge-warning">Status: ${status}</span>`;
+}
+
+async function introspectAfterRevoke() {
+    const token = document.getElementById('rev-token').value;
+    const clientId = document.getElementById('rev-client').value;
+    const secret = document.getElementById('rev-secret').value;
+    
+    const body = `token=${encodeURIComponent(token)}`;
+    const auth = btoa(`${clientId}:${secret}`);
+    
+    const { data } = await api('POST', '/connect/introspect', body, { 'Authorization': `Basic ${auth}` });
+    
+    let output = document.getElementById('rev-output').innerHTML;
+    output += `\n\n<strong>Introspection after revocation:</strong>\n`;
+    output += data.active
+        ? `<span class="badge badge-warning">⚠ Still active?!</span>\n${syntaxHighlight(pretty(data))}`
+        : `<span class="badge badge-success">✓ Confirmed inactive</span>\n${syntaxHighlight(pretty(data))}`;
+    document.getElementById('rev-output').innerHTML = output;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 8. DPoP
+// ═══════════════════════════════════════════════════════════════════════════════
+async function generateDpopKey() {
+    state.dpopKey = await crypto.subtle.generateKey(
+        { name: 'ECDSA', namedCurve: 'P-256' },
+        true, ['sign', 'verify']
+    );
+    
+    const pubKey = await crypto.subtle.exportKey('jwk', state.dpopKey.publicKey);
+    state.dpopJwk = { kty: pubKey.kty, crv: pubKey.crv, x: pubKey.x, y: pubKey.y };
+    
+    showOutput('dpop-key-output', {
+        algorithm: 'ES256 (P-256)',
+        public_key_jwk: state.dpopJwk,
+        note: 'Private key held in browser memory (Web Crypto API)'
+    });
+    
+    document.getElementById('dpop-step1').classList.add('done');
+    document.getElementById('dpop-proof-btn').disabled = false;
+}
+
+async function createDpopProof() {
+    const header = { typ: 'dpop+jwt', alg: 'ES256', jwk: state.dpopJwk };
+    const payload = {
+        htm: 'POST',
+        htu: `${window.location.origin}/connect/token`,
+        iat: Math.floor(Date.now() / 1000),
+        jti: randomString(16),
+    };
+    
+    const encodedHeader = b64url(new TextEncoder().encode(JSON.stringify(header)));
+    const encodedPayload = b64url(new TextEncoder().encode(JSON.stringify(payload)));
+    const signingInput = `${encodedHeader}.${encodedPayload}`;
+    
+    const signature = await crypto.subtle.sign(
+        { name: 'ECDSA', hash: 'SHA-256' },
+        state.dpopKey.privateKey,
+        new TextEncoder().encode(signingInput)
+    );
+    
+    // Convert DER signature to raw r||s format (already raw from Web Crypto)
+    state.dpopProof = `${signingInput}.${b64url(signature)}`;
+    
+    showOutput('dpop-proof-output', {
+        dpop_proof: state.dpopProof,
+        decoded_header: header,
+        decoded_payload: payload,
+    });
+    
+    document.getElementById('dpop-step2').classList.add('done');
+    document.getElementById('dpop-token-btn').disabled = false;
+}
+
+async function dpopTokenRequest() {
+    // Use client_credentials with DPoP
+    const body = `grant_type=client_credentials&scope=api&client_id=m2m-demo&client_secret=demo-secret`;
+    
+    // Create fresh proof for this request
+    const header = { typ: 'dpop+jwt', alg: 'ES256', jwk: state.dpopJwk };
+    const payload = {
+        htm: 'POST',
+        htu: `${window.location.origin}/connect/token`,
+        iat: Math.floor(Date.now() / 1000),
+        jti: randomString(16),
+    };
+    const encodedHeader = b64url(new TextEncoder().encode(JSON.stringify(header)));
+    const encodedPayload = b64url(new TextEncoder().encode(JSON.stringify(payload)));
+    const signingInput = `${encodedHeader}.${encodedPayload}`;
+    const signature = await crypto.subtle.sign(
+        { name: 'ECDSA', hash: 'SHA-256' },
+        state.dpopKey.privateKey,
+        new TextEncoder().encode(signingInput)
+    );
+    const proof = `${signingInput}.${b64url(signature)}`;
+    
+    const { data } = await api('POST', '/connect/token', body, { 'DPoP': proof });
+    
+    if (data.access_token) {
+        const decoded = decodeJwt(data.access_token);
+        let output = `<span class="badge badge-success">✓ DPoP-bound token</span>\n<strong>Token type: ${data.token_type}</strong>\n\n`;
+        output += `<strong>Token Response:</strong>\n${syntaxHighlight(pretty(data))}\n\n`;
+        if (decoded) {
+            output += `<strong>JWT Payload (note cnf.jkt):</strong>\n<div class="token-part token-payload">${syntaxHighlight(pretty(decoded.payload))}</div>`;
+        }
+        document.getElementById('dpop-token-output').innerHTML = output;
+        document.getElementById('dpop-step3').classList.add('done');
+    } else {
+        showOutput('dpop-token-output', data);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 9. PAR
+// ═══════════════════════════════════════════════════════════════════════════════
+async function pushAuthRequest() {
+    // Generate PKCE for PAR
+    state.parCodeVerifier = randomString(43);
+    const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(state.parCodeVerifier));
+    state.parCodeChallenge = b64url(hash);
+    state.parState = randomString(16);
+    
+    const body = `response_type=code&client_id=interactive-dashboard&redirect_uri=${encodeURIComponent('https://localhost:5001/callback')}&scope=${encodeURIComponent('openid profile email')}&state=${state.parState}&code_challenge=${state.parCodeChallenge}&code_challenge_method=S256`;
+    
+    const { data } = await api('POST', '/connect/par', body);
+    
+    if (data.request_uri) {
+        state.parRequestUri = data.request_uri;
+        showOutput('par-push-output', data);
+        document.getElementById('par-step1').classList.add('done');
+        document.getElementById('par-auth-btn').disabled = false;
+    } else {
+        showOutput('par-push-output', data);
+    }
+}
+
+function parAuthorize() {
+    const url = `/connect/authorize?client_id=interactive-dashboard&request_uri=${encodeURIComponent(state.parRequestUri)}`;
+    
+    showOutput('par-auth-output', `URL: ${url}\n\nOpening in popup...`);
+    document.getElementById('par-step2').classList.add('done');
+    
+    // Temporarily swap code_verifier for PAR exchange
+    state.codeVerifier = state.parCodeVerifier;
+    state.authState = state.parState;
+    
+    window.open(url, 'simpleauth-par', 'width=500,height=600,left=200,top=100');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 10. FORM POST
+// ═══════════════════════════════════════════════════════════════════════════════
+async function startFormPost() {
+    // Generate PKCE
+    const verifier = randomString(43);
+    const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+    const challenge = b64url(hash);
+    const fpState = randomString(16);
+    
+    state.codeVerifier = verifier;
+    state.authState = fpState;
+    
+    const url = `/connect/authorize?response_type=code&client_id=interactive-dashboard&redirect_uri=${encodeURIComponent('https://localhost:5001/callback-form-post')}&scope=${encodeURIComponent('openid profile')}&state=${fpState}&code_challenge=${challenge}&code_challenge_method=S256&response_mode=form_post`;
+    
+    showOutput('fp-output', `URL: ${url}\n\nOpening in popup... The server will return an HTML form that auto-POSTs to the redirect_uri.`);
+    window.open(url, 'simpleauth-formpost', 'width=500,height=600,left=200,top=100');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 11. END SESSION
+// ═══════════════════════════════════════════════════════════════════════════════
+function endSession() {
+    const idToken = document.getElementById('es-id-token').value;
+    const redirect = document.getElementById('es-redirect').value;
+    
+    let url = '/connect/endsession?';
+    if (idToken) url += `id_token_hint=${encodeURIComponent(idToken)}&`;
+    if (redirect) url += `post_logout_redirect_uri=${encodeURIComponent(redirect)}`;
+    
+    showOutput('es-output', `Redirecting to: ${url}\n\nThis will clear your session cookie and redirect to the post-logout URI.`);
+    
+    setTimeout(() => { window.open(url, '_blank'); }, 500);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 12. PROMPT=NONE
+// ═══════════════════════════════════════════════════════════════════════════════
+async function promptNone() {
+    const verifier = randomString(43);
+    const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+    const challenge = b64url(hash);
+    const pnState = randomString(16);
+    
+    const url = `/connect/authorize?response_type=code&client_id=interactive-dashboard&redirect_uri=${encodeURIComponent('https://localhost:5001/callback')}&scope=openid&state=${pnState}&code_challenge=${challenge}&code_challenge_method=S256&prompt=none`;
+    
+    // Fetch via redirect-follow manual to capture the response
+    const resp = await fetch(url, { redirect: 'manual' });
+    
+    if (resp.type === 'opaqueredirect') {
+        // Browser doesn't let us see redirect Location in fetch, use a different approach
+        showOutput('prompt-output', `Server returned a redirect (302).\n\nTo test properly, this will open in a popup. If you have an active session, you'll get a code silently. Otherwise: login_required error.`);
+        
+        state.codeVerifier = verifier;
+        state.authState = pnState;
+        window.open(url, 'simpleauth-prompt', 'width=500,height=600,left=200,top=100');
+    } else {
+        const data = await resp.json().catch(() => resp.text());
+        let output = '';
+        if (data.error === 'login_required') {
+            output = `<span class="badge badge-warning">✗ login_required</span>\n\nNo active session. Per OIDC spec, prompt=none returns this error without showing any UI.\n\n`;
+        } else if (data.error) {
+            output = `<span class="badge badge-warning">✗ ${data.error}</span>\n\n`;
+        }
+        output += syntaxHighlight(pretty(data));
+        document.getElementById('prompt-output').innerHTML = output;
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Initialize
+// ═══════════════════════════════════════════════════════════════════════════════
+console.log('SimpleAuth Interactive Dashboard loaded. Server: ' + window.location.origin);
+</script>
+</body>
+</html>
