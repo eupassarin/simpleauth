@@ -164,20 +164,20 @@ internal static class AuthorizationEndpoint
             string requestObject = ReadParameter(context, "request");
             if (!string.IsNullOrWhiteSpace(requestObject))
             {
-                await RedirectOrErrorAsync(context, redirectUri, state, "request_not_supported", "JWT request objects are not supported. Use PAR (request_uri) instead.", serverState.Issuer);
+                await RedirectOrErrorAsync(context, redirectUri, state, "request_not_supported", "JWT request objects are not supported. Use PAR (request_uri) instead.", serverState.Issuer, responseMode);
                 return;
             }
         }
 
         if (client.RequirePkce && (!PkceValidator.IsMethodAllowed(codeChallengeMethod) || string.IsNullOrWhiteSpace(codeChallenge)))
         {
-            await RedirectOrErrorAsync(context, redirectUri, state, "invalid_request", "PKCE S256 is required.", serverState.Issuer);
+            await RedirectOrErrorAsync(context, redirectUri, state, "invalid_request", "PKCE S256 is required.", serverState.Issuer, responseMode);
             return;
         }
 
         if (!client.AllowedGrantTypes.Contains(GrantType.AuthorizationCode, StringComparer.Ordinal))
         {
-            await RedirectOrErrorAsync(context, redirectUri, state, "unauthorized_client", "authorization_code is not allowed for this client.", serverState.Issuer);
+            await RedirectOrErrorAsync(context, redirectUri, state, "unauthorized_client", "authorization_code is not allowed for this client.", serverState.Issuer, responseMode);
             return;
         }
 
@@ -185,7 +185,7 @@ internal static class AuthorizationEndpoint
         IReadOnlyList<string> grantedScopes = ValidateScopes(client, requestedScopes);
         if (grantedScopes.Count == 0)
         {
-            await RedirectOrErrorAsync(context, redirectUri, state, "invalid_scope", "No valid scopes were requested.", serverState.Issuer);
+            await RedirectOrErrorAsync(context, redirectUri, state, "invalid_scope", "No valid scopes were requested.", serverState.Issuer, responseMode);
             return;
         }
 
@@ -215,7 +215,7 @@ internal static class AuthorizationEndpoint
             // OIDC §3.1.2.6: prompt=none MUST return login_required if not authenticated.
             if (string.Equals(prompt, "none", StringComparison.OrdinalIgnoreCase))
             {
-                await RedirectOrErrorAsync(context, redirectUri, state, "login_required", "The user is not authenticated.", serverState.Issuer);
+                await RedirectOrErrorAsync(context, redirectUri, state, "login_required", "The user is not authenticated.", serverState.Issuer, responseMode);
                 return;
             }
 
@@ -278,7 +278,7 @@ internal static class AuthorizationEndpoint
             {
                 if (string.Equals(prompt, "none", StringComparison.OrdinalIgnoreCase))
                 {
-                    await RedirectOrErrorAsync(context, redirectUri, state, "consent_required", "User consent is required.", serverState.Issuer);
+                    await RedirectOrErrorAsync(context, redirectUri, state, "consent_required", "User consent is required.", serverState.Issuer, responseMode);
                     return;
                 }
 
@@ -411,10 +411,20 @@ internal static class AuthorizationEndpoint
         return $"{uri}{separator}{Uri.EscapeDataString(name)}={Uri.EscapeDataString(value)}";
     }
 
-    private static async Task RedirectOrErrorAsync(HttpContext context, string redirectUri, string state, string error, string description, string? issuer = null)
+    private static async Task RedirectOrErrorAsync(HttpContext context, string redirectUri, string state, string error, string description, string? issuer = null, string? responseMode = null)
     {
         if (!string.IsNullOrWhiteSpace(redirectUri))
         {
+            // OAuth 2.0 Form Post Response Mode §4: error responses must also use form_post.
+            if (string.Equals(responseMode, "form_post", StringComparison.OrdinalIgnoreCase))
+            {
+                string html = BuildFormPostErrorHtml(redirectUri, state, error, description, issuer);
+                context.Response.StatusCode = StatusCodes.Status200OK;
+                context.Response.ContentType = "text/html; charset=utf-8";
+                await context.Response.WriteAsync(html, context.RequestAborted);
+                return;
+            }
+
             string redirect = redirectUri;
             // RFC 9207 §2: include iss in error redirect responses too
             if (!string.IsNullOrWhiteSpace(issuer))
@@ -472,6 +482,35 @@ internal static class AuthorizationEndpoint
         {
             return [];
         }
+    }
+
+    private static string BuildFormPostErrorHtml(string redirectUri, string? state, string error, string description, string? issuer)
+    {
+        var sb = new System.Text.StringBuilder(512);
+        sb.Append("<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Submit</title></head><body onload=\"document.forms[0].submit()\">");
+        sb.Append("<form method=\"POST\" action=\"");
+        sb.Append(System.Net.WebUtility.HtmlEncode(redirectUri));
+        sb.Append("\">");
+        if (!string.IsNullOrWhiteSpace(issuer))
+        {
+            sb.Append("<input type=\"hidden\" name=\"iss\" value=\"");
+            sb.Append(System.Net.WebUtility.HtmlEncode(issuer));
+            sb.Append("\"/>");
+        }
+        sb.Append("<input type=\"hidden\" name=\"error\" value=\"");
+        sb.Append(System.Net.WebUtility.HtmlEncode(error));
+        sb.Append("\"/>");
+        sb.Append("<input type=\"hidden\" name=\"error_description\" value=\"");
+        sb.Append(System.Net.WebUtility.HtmlEncode(description));
+        sb.Append("\"/>");
+        if (!string.IsNullOrWhiteSpace(state))
+        {
+            sb.Append("<input type=\"hidden\" name=\"state\" value=\"");
+            sb.Append(System.Net.WebUtility.HtmlEncode(state));
+            sb.Append("\"/>");
+        }
+        sb.Append("<noscript><button type=\"submit\">Continue</button></noscript></form></body></html>");
+        return sb.ToString();
     }
 
     private static string BuildFormPostHtml(string redirectUri, string code, string state, string issuer)
