@@ -38,6 +38,13 @@ public sealed class SimpleAuthServerConfiguration
             throw new InvalidOperationException("SimpleAuth requires a non-empty issuer.");
         }
 
+        // OIDC Discovery §3: Issuer MUST be an HTTPS URL (localhost permitted for development).
+        if (!Uri.TryCreate(Issuer, UriKind.Absolute, out Uri? issuerUri) ||
+            (issuerUri.Scheme != "https" && issuerUri.Host != "localhost"))
+        {
+            throw new InvalidOperationException("Issuer must be an absolute HTTPS URL (http is only allowed for localhost development).");
+        }
+
         Keys.EnsureConfigured();
     }
 }

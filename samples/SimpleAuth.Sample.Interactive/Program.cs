@@ -150,12 +150,17 @@ static async Task HandleFormPostCallback(HttpContext ctx)
     string state = form["state"].ToString();
     string codePreview = code.Length > 8 ? code[..8] + "..." : code;
 
+    // Escape for safe interpolation into JavaScript string literals (prevents XSS)
+    string jsCode = System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(code);
+    string jsState = System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(state);
+    string htmlCode = System.Net.WebUtility.HtmlEncode(codePreview);
+
     ctx.Response.ContentType = "text/html; charset=utf-8";
     await ctx.Response.WriteAsync(
         "<!DOCTYPE html><html><head><title>Form Post Callback</title><script>" +
-        "if(window.opener){window.opener.postMessage({type:'form-post-callback',code:'" + code + "',state:'" + state + "'},'*');window.close();}else{" +
-        "window.location.href='/#callback?code=" + code + "&state=" + state + "&mode=form_post';}" +
-        "</script></head><body><p>Form post received. Code: <code>" + codePreview + "</code></p></body></html>");
+        "if(window.opener){window.opener.postMessage({type:'form-post-callback',code:'" + jsCode + "',state:'" + jsState + "'},'*');window.close();}else{" +
+        "window.location.href='/#callback?code=" + jsCode + "&state=" + jsState + "&mode=form_post';}" +
+        "</script></head><body><p>Form post received. Code: <code>" + htmlCode + "</code></p></body></html>");
 }
 
 // ── Claims enricher ───────────────────────────────────────────────────────────

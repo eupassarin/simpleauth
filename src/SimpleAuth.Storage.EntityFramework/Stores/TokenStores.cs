@@ -35,6 +35,7 @@ internal sealed class EfAuthorizationCodeStore : IAuthorizationCodeStore
             SessionId = code.SessionId,
             AuthTime = code.AuthTime,
             AcrValue = code.AcrValue,
+            RequestedUserInfoClaims = code.RequestedUserInfoClaims.Count > 0 ? JsonConverters.SerializeStringList(code.RequestedUserInfoClaims) : null,
             IsConsumed = false,
         };
 
@@ -102,6 +103,7 @@ internal sealed class EfAuthorizationCodeStore : IAuthorizationCodeStore
         SessionId = e.SessionId,
         AuthTime = e.AuthTime,
         AcrValue = e.AcrValue,
+        RequestedUserInfoClaims = e.RequestedUserInfoClaims is not null ? JsonConverters.DeserializeStringList(e.RequestedUserInfoClaims) : [],
         IsConsumed = e.IsConsumed,
     };
 }
@@ -234,6 +236,7 @@ internal sealed class EfTokenStore : ITokenStore
             RefreshTokenHandle = token.RefreshTokenHandle,
             AuthorizationCodeHandle = token.AuthorizationCodeHandle,
             JktThumbprint = token.JktThumbprint,
+            RequestedUserInfoClaims = token.RequestedUserInfoClaims.Count > 0 ? JsonConverters.SerializeStringList(token.RequestedUserInfoClaims) : null,
         };
 
         _context.IssuedTokens.Add(entity);
@@ -294,6 +297,7 @@ internal sealed class EfTokenStore : ITokenStore
         RefreshTokenHandle = e.RefreshTokenHandle,
         AuthorizationCodeHandle = e.AuthorizationCodeHandle,
         JktThumbprint = e.JktThumbprint,
+        RequestedUserInfoClaims = e.RequestedUserInfoClaims is not null ? JsonConverters.DeserializeStringList(e.RequestedUserInfoClaims) : [],
     };
 }
 
@@ -323,6 +327,7 @@ internal sealed class EfParStore : IParStore
             ResponseType = entry.ResponseType,
             State = entry.State,
             Nonce = entry.Nonce,
+            ResponseMode = entry.ResponseMode,
             CreatedAt = entry.CreatedAt,
             ExpiresAt = entry.ExpiresAt,
         };
@@ -366,6 +371,7 @@ internal sealed class EfParStore : IParStore
         ResponseType = e.ResponseType,
         State = e.State,
         Nonce = e.Nonce,
+        ResponseMode = e.ResponseMode,
         CreatedAt = e.CreatedAt,
         ExpiresAt = e.ExpiresAt,
     };

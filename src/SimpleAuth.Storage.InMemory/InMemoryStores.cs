@@ -763,7 +763,8 @@ public sealed class InMemorySigningKeyStore : ISigningKeyStore
 
             foreach (SigningKeyInfo key in _keys.Values)
             {
-                if (key.RetireAt > now && key.RemoveAt > now)
+                // Keys remain in JWKS until RemoveAt for validation during rotation grace period.
+                if (key.RemoveAt > now)
                 {
                     result.Add(key);
                 }
@@ -784,7 +785,8 @@ public sealed class InMemorySigningKeyStore : ISigningKeyStore
 
             foreach (SigningKeyInfo key in _keys.Values)
             {
-                if (key.IsPrimary && key.RemoveAt > now)
+                // A primary key must not be retired — retired keys should only validate, not sign.
+                if (key.IsPrimary && key.RetireAt > now)
                 {
                     return Task.FromResult<SigningKeyInfo?>(key);
                 }

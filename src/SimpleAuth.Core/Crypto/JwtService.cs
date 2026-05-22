@@ -16,7 +16,7 @@ namespace SimpleAuth.Crypto;
 internal sealed class JwtService
 {
     private readonly string _issuer;
-    private SigningKeyHolder _current;
+    private volatile SigningKeyHolder _current;
 
     internal JwtService(string issuer, SigningKeyHolder signingKey)
     {

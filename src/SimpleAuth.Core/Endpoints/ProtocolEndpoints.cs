@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -424,12 +425,12 @@ internal static class UserInfoEndpoint
 
         var response = new UserInfoResponse
         {
-            ["sub"] = token.SubjectId,
+            ["sub"] = JsonValue.Create(token.SubjectId),
         };
 
         if (!string.IsNullOrWhiteSpace(token.ClientId))
         {
-            response["client_id"] = token.ClientId;
+            response["client_id"] = JsonValue.Create(token.ClientId);
         }
 
         foreach (Claim claim in token.Claims)
@@ -465,34 +466,25 @@ internal static class UserInfoEndpoint
         "address",
     };
 
-    private static object? CoerceClaimValue(Claim claim)
+    private static JsonNode? CoerceClaimValue(Claim claim)
     {
         if (NumericClaims.Contains(claim.Type) && long.TryParse(claim.Value, out long numericValue))
         {
-            return numericValue;
+            return JsonValue.Create(numericValue);
         }
 
         if (string.Equals(claim.ValueType, ClaimValueTypes.Boolean, StringComparison.Ordinal) &&
             bool.TryParse(claim.Value, out bool boolValue))
         {
-            return boolValue;
+            return JsonValue.Create(boolValue);
         }
 
-        // address and similar claims are JSON objects — parse into Dictionary<string, string?> for AOT-safe serialization
+        // address and similar claims are JSON objects — parse into JsonNode for AOT-safe serialization
         if (JsonObjectClaims.Contains(claim.Type))
         {
             try
             {
-                using JsonDocument doc = JsonDocument.Parse(claim.Value);
-                var dict = new Dictionary<string, string?>(StringComparer.Ordinal);
-                foreach (JsonProperty prop in doc.RootElement.EnumerateObject())
-                {
-                    dict[prop.Name] = prop.Value.ValueKind == JsonValueKind.String
-                        ? prop.Value.GetString()
-                        : prop.Value.ToString();
-                }
-
-                return dict;
+                return JsonNode.Parse(claim.Value);
             }
             catch (JsonException)
             {
@@ -500,7 +492,7 @@ internal static class UserInfoEndpoint
             }
         }
 
-        return claim.Value;
+        return JsonValue.Create(claim.Value);
     }
 
     /// <summary>

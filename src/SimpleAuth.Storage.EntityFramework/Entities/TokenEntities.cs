@@ -42,6 +42,9 @@ internal sealed class AuthorizationCodeEntity
     public string? SessionId { get; set; }
 
     public bool IsConsumed { get; set; }
+
+    /// <summary>JSON: string[] — OIDC §5.5 claims parameter: requested userinfo claim names.</summary>
+    public string? RequestedUserInfoClaims { get; set; }
 }
 
 /// <summary>EF Core entity for a refresh token.</summary>
@@ -104,6 +107,9 @@ internal sealed class IssuedTokenEntity
 
     [MaxLength(128)]
     public string? JktThumbprint { get; set; }
+
+    /// <summary>JSON: string[] — OIDC §5.5 claims parameter: requested userinfo claim names.</summary>
+    public string? RequestedUserInfoClaims { get; set; }
 }
 
 /// <summary>EF Core entity for a PAR entry (RFC 9126).</summary>
@@ -136,6 +142,10 @@ internal sealed class ParEntryEntity
 
     [MaxLength(500)]
     public string? Nonce { get; set; }
+
+    /// <summary>OAuth 2.0 response_mode (e.g., query, fragment, form_post).</summary>
+    [MaxLength(20)]
+    public string? ResponseMode { get; set; }
 
     public required DateTime CreatedAt { get; set; }
     public required DateTime ExpiresAt { get; set; }

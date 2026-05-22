@@ -21,12 +21,20 @@ internal static class JwkSerializer
         ECParameters parameters = key.ExportParameters(includePrivateParameters: false);
         ECPoint q = parameters.Q;
 
+        string crv = parameters.Curve.Oid?.Value switch
+        {
+            "1.2.840.10045.3.1.7" => "P-256",
+            "1.3.132.0.34" => "P-384",
+            "1.3.132.0.35" => "P-521",
+            _ => "P-256", // Default to P-256 for well-known named curves without OID
+        };
+
         return new Jwk(
             Kty: "EC",
             Use: "sig",
             Kid: keyId,
             Alg: algorithm,
-            Crv: "P-256",
+            Crv: crv,
             X: Base64UrlEncode(q.X!),
             Y: Base64UrlEncode(q.Y!),
             N: null,

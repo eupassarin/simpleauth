@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace SimpleAuth;
@@ -123,7 +124,7 @@ public sealed record DiscoveryDocument
 }
 
 /// <summary>UserInfo endpoint response per OIDC Core §5.3.</summary>
-public sealed class UserInfoResponse : Dictionary<string, object?>
+public sealed class UserInfoResponse : Dictionary<string, JsonNode?>
 {
     /// <summary>Initializes an empty UserInfo response.</summary>
     public UserInfoResponse() : base(StringComparer.Ordinal) { }
