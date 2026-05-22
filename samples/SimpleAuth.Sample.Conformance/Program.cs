@@ -236,7 +236,7 @@ app.MapGet("/autologout", async (HttpContext ctx) =>
 {
     await ctx.SignOutAsync("SimpleAuth.Cookie");
     return Results.Content("""
-        <!DOCTYPE html><html><head><title>Logged Out — Ready for Test</title>
+        <!DOCTYPE html><html><head><meta charset="utf-8"><title>Logged Out — Ready for Test</title>
         <meta http-equiv="refresh" content="3;url=/">
         <style>body{font-family:system-ui;max-width:600px;margin:4rem auto;text-align:center;background:#111;color:#eee}
         .ready{background:#052e16;border:2px solid #22c55e;border-radius:8px;padding:1.5rem;margin:1.5rem 0}
@@ -251,7 +251,7 @@ app.MapGet("/autologout", async (HttpContext ctx) =>
         </div>
         <p><a href="/" style="color:#60a5fa">← Back to home</a> (auto-redirecting in 3 seconds)</p>
         </body></html>
-        """, "text/html");
+        """, "text/html; charset=utf-8");
 });
 
 // ── Status endpoint for health checks ─────────────────────────────────────────
@@ -288,7 +288,7 @@ app.MapGet("/", (HttpContext httpContext) =>
     return Results.Content($$"""
 <!DOCTYPE html>
 <html>
-<head><title>SimpleAuth — Conformance Suite Deployment</title>
+<head><meta charset="utf-8"><title>SimpleAuth — Conformance Suite Deployment</title>
 <meta http-equiv="refresh" content="8">
 <style>body{font-family:system-ui;max-width:700px;margin:2rem auto;padding:1rem;background:#111;color:#eee}
 h1{color:#60a5fa}code{background:#222;padding:0.2rem 0.4rem;border-radius:3px;font-size:0.9rem}
@@ -377,7 +377,7 @@ docker run -p 8080:8080 \
 
 <p style="text-align:center;margin-top:2rem"><span class="badge">✓ Ready for certification</span></p>
 </body></html>
-""", "text/html");
+""", "text/html; charset=utf-8");
 });
 
 await app.RunAsync();
