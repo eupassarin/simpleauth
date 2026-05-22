@@ -22,6 +22,13 @@ public sealed class ClaimsEnrichmentContext
     public required IReadOnlyList<string> GrantedScopes { get; init; }
 
     /// <summary>
+    /// Claim names explicitly requested via the OIDC <c>claims</c> request parameter (§5.5).
+    /// These claims SHOULD be returned in the UserInfo response even if their scope was not requested.
+    /// Empty when the <c>claims</c> parameter was not used.
+    /// </summary>
+    public IReadOnlyList<string> RequestedClaims { get; init; } = [];
+
+    /// <summary>
     /// Claims produced by this enrichment run.
     /// Populate this collection to include additional claims in the ID token and UserInfo response.
     /// </summary>

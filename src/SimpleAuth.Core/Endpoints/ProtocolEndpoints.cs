@@ -229,6 +229,12 @@ internal sealed class AccessTokenDetails
     /// </summary>
     internal string? JktThumbprint { get; init; }
 
+    /// <summary>
+    /// Claim names explicitly requested via the OIDC <c>claims</c> parameter (§5.5) for userinfo.
+    /// Populated only for reference tokens where the claim is stored on the <see cref="IssuedToken"/>.
+    /// </summary>
+    internal IReadOnlyList<string> RequestedUserInfoClaims { get; init; } = [];
+
     /// <summary>Creates a detail object from a validated JWT.</summary>
     internal static AccessTokenDetails FromClaimsIdentity(ClaimsIdentity identity, string rawToken, bool referenceToken)
     {
@@ -267,6 +273,7 @@ internal sealed class AccessTokenDetails
             ExpiresAt = new DateTimeOffset(token.ExpiresAt, TimeSpan.Zero),
             Claims = [],
             JktThumbprint = token.JktThumbprint,
+            RequestedUserInfoClaims = token.RequestedUserInfoClaims,
         };
     }
 
@@ -406,6 +413,7 @@ internal static class UserInfoEndpoint
             SubjectId = token.SubjectId,
             ClientId = token.ClientId ?? string.Empty,
             GrantedScopes = token.Scopes,
+            RequestedClaims = token.RequestedUserInfoClaims,
         };
 
         IEnumerable<IClaimsEnricher> enrichers = context.RequestServices.GetServices<IClaimsEnricher>();

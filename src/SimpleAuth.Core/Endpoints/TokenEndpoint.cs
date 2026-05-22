@@ -221,7 +221,7 @@ internal static class TokenEndpoint
             (refreshToken, refreshTokenHandle) = await IssueRefreshTokenAsync(context, refreshTokenStore, client, authorizationCode, authorizationCode.GrantedScopes, dpopJkt);
         }
 
-        string accessToken = await IssueAccessTokenAsync(context, state, tokenStore, jwt, client, authorizationCode.SubjectId, authorizationCode.GrantedScopes, refreshTokenHandle, dpopJkt, codeHandle);
+        string accessToken = await IssueAccessTokenAsync(context, state, tokenStore, jwt, client, authorizationCode.SubjectId, authorizationCode.GrantedScopes, refreshTokenHandle, dpopJkt, codeHandle, authorizationCode.RequestedUserInfoClaims);
 
         string? idToken = null;
         if (authorizationCode.GrantedScopes.Contains(StandardScope.OpenId, StringComparer.Ordinal))
@@ -444,7 +444,8 @@ internal static class TokenEndpoint
         IReadOnlyList<string> grantedScopes,
         string? refreshTokenHandle = null,
         string? dpopJkt = null,
-        string? authorizationCodeHandle = null)
+        string? authorizationCodeHandle = null,
+        IReadOnlyList<string>? requestedUserInfoClaims = null)
     {
         if (client.AccessTokenType == AccessTokenType.Reference)
         {
@@ -460,6 +461,7 @@ internal static class TokenEndpoint
                 RefreshTokenHandle = refreshTokenHandle,
                 AuthorizationCodeHandle = authorizationCodeHandle,
                 JktThumbprint = dpopJkt,
+                RequestedUserInfoClaims = requestedUserInfoClaims ?? [],
             };
 
             await tokenStore.StoreAsync(issuedToken, context.RequestAborted);

@@ -16,7 +16,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyDescriptionAttribute(("EF Core store implementations for SimpleAuth — SQL Server, PostgreSQL, SQLite and" +
     " any relational provider."))]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1588afb3781ef5c3e6b428c15ee01076f16cb83e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+27f1b7de43e7af9621081692093e36fa09f45c5a")]
 [assembly: System.Reflection.AssemblyProductAttribute("SimpleAuth")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SimpleAuth.Storage.EntityFramework")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

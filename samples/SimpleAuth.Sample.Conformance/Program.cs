@@ -420,42 +420,69 @@ static async Task HandleAutoLogin(HttpContext ctx)
 
 internal sealed class ConformanceClaimsEnricher(string testSub, string testName, string testEmail) : IClaimsEnricher
 {
+    // Mapping of profile claim names to their values for the test user
+    private IReadOnlyDictionary<string, Claim> BuildProfileClaims() => new Dictionary<string, Claim>(StringComparer.Ordinal)
+    {
+        ["name"] = new("name", testName),
+        ["given_name"] = new("given_name", "Test"),
+        ["family_name"] = new("family_name", "User"),
+        ["middle_name"] = new("middle_name", "A"),
+        ["nickname"] = new("nickname", testSub),
+        ["preferred_username"] = new("preferred_username", testSub),
+        ["profile"] = new("profile", $"https://example.com/users/{testSub}"),
+        ["picture"] = new("picture", "https://example.com/users/test-user/photo.jpg"),
+        ["website"] = new("website", "https://example.com"),
+        ["gender"] = new("gender", "male"),
+        ["birthdate"] = new("birthdate", "1990-01-01"),
+        ["zoneinfo"] = new("zoneinfo", "America/Sao_Paulo"),
+        ["locale"] = new("locale", "pt-BR"),
+        // updated_at must be a number — CoerceClaimValue in UserInfoEndpoint handles long.Parse
+        ["updated_at"] = new("updated_at", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
+    };
+
     public ValueTask EnrichAsync(ClaimsEnrichmentContext context, CancellationToken cancellationToken = default)
     {
-        // OIDC Core §5.1 — Return all standard profile claims for the test user
-        if (context.GrantedScopes.Contains(StandardScope.Profile, StringComparer.Ordinal))
+        bool hasProfileScope = context.GrantedScopes.Contains(StandardScope.Profile, StringComparer.Ordinal);
+
+        // OIDC Core §5.1 — Return all profile claims when scope=profile is granted.
+        if (hasProfileScope)
         {
-            context.Claims.Add(new Claim("name", testName));
-            context.Claims.Add(new Claim("given_name", "Test"));
-            context.Claims.Add(new Claim("family_name", "User"));
-            context.Claims.Add(new Claim("middle_name", "A"));
-            context.Claims.Add(new Claim("nickname", testSub));
-            context.Claims.Add(new Claim("preferred_username", testSub));
-            context.Claims.Add(new Claim("profile", $"https://example.com/users/{testSub}"));
-            context.Claims.Add(new Claim("picture", "https://example.com/users/test-user/photo.jpg"));
-            context.Claims.Add(new Claim("website", "https://example.com"));
-            context.Claims.Add(new Claim("gender", "male"));
-            context.Claims.Add(new Claim("birthdate", "1990-01-01"));
-            context.Claims.Add(new Claim("zoneinfo", "America/Sao_Paulo"));
-            context.Claims.Add(new Claim("locale", "pt-BR"));
-            // updated_at must be a number — CoerceClaimValue in UserInfoEndpoint handles long.Parse
-            context.Claims.Add(new Claim("updated_at", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()));
+            foreach (Claim claim in BuildProfileClaims().Values)
+            {
+                context.Claims.Add(claim);
+            }
+        }
+        else if (context.RequestedClaims.Count > 0)
+        {
+            // OIDC Core §5.5 — When specific claims are requested via the claims parameter,
+            // return those claims even if their scope was not granted.
+            var profileClaims = BuildProfileClaims();
+            foreach (string claimName in context.RequestedClaims)
+            {
+                if (profileClaims.TryGetValue(claimName, out Claim? claim))
+                {
+                    context.Claims.Add(claim);
+                }
+            }
         }
 
-        if (context.GrantedScopes.Contains(StandardScope.Email, StringComparer.Ordinal))
+        if (context.GrantedScopes.Contains(StandardScope.Email, StringComparer.Ordinal)
+            || context.RequestedClaims.Contains("email", StringComparer.Ordinal))
         {
             context.Claims.Add(new Claim("email", testEmail));
             // email_verified must be boolean — CoerceClaimValue handles bool.Parse
             context.Claims.Add(new Claim("email_verified", "true", ClaimValueTypes.Boolean));
         }
 
-        if (context.GrantedScopes.Contains(StandardScope.Phone, StringComparer.Ordinal))
+        if (context.GrantedScopes.Contains(StandardScope.Phone, StringComparer.Ordinal)
+            || context.RequestedClaims.Contains("phone_number", StringComparer.Ordinal))
         {
             context.Claims.Add(new Claim("phone_number", "+1-555-0100"));
             context.Claims.Add(new Claim("phone_number_verified", "true", ClaimValueTypes.Boolean));
         }
 
-        if (context.GrantedScopes.Contains(StandardScope.Address, StringComparer.Ordinal))
+        if (context.GrantedScopes.Contains(StandardScope.Address, StringComparer.Ordinal)
+            || context.RequestedClaims.Contains("address", StringComparer.Ordinal))
         {
             // address must be a JSON object per OIDC Core §5.1.1
             context.Claims.Add(new Claim("address", """{"formatted":"123 Test St\nTestville, TS 12345\nBR","street_address":"123 Test St","locality":"Testville","region":"TS","postal_code":"12345","country":"BR"}"""));

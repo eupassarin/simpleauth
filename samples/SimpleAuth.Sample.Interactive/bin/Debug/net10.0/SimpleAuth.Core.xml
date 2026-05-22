@@ -494,6 +494,12 @@
         <member name="M:SimpleAuth.Endpoints.AuthorizationEndpoint.HandleAsync(Microsoft.AspNetCore.Http.HttpContext)">
             <summary>Handles browser-based authorization requests.</summary>
         </member>
+        <member name="M:SimpleAuth.Endpoints.AuthorizationEndpoint.ParseRequestedUserInfoClaims(System.String)">
+            <summary>
+            Parses the OIDC §5.5 <c>claims</c> JSON parameter and returns the userinfo claim names requested.
+            Returns an empty list if the parameter is absent, malformed, or has no userinfo entries.
+            </summary>
+        </member>
         <member name="T:SimpleAuth.Endpoints.InteractionEndpoints">
             <summary>Built-in minimal login and consent UI pages for SimpleAuth.</summary>
         </member>
@@ -558,6 +564,12 @@
             <summary>
             JWK thumbprint from the <c>cnf.jkt</c> claim (RFC 9449).
             Non-null when the token is DPoP-bound; null for standard Bearer tokens.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.Endpoints.AccessTokenDetails.RequestedUserInfoClaims">
+            <summary>
+            Claim names explicitly requested via the OIDC <c>claims</c> parameter (§5.5) for userinfo.
+            Populated only for reference tokens where the claim is stored on the <see cref="T:SimpleAuth.IssuedToken"/>.
             </summary>
         </member>
         <member name="M:SimpleAuth.Endpoints.AccessTokenDetails.FromClaimsIdentity(System.Security.Claims.ClaimsIdentity,System.String,System.Boolean)">
@@ -724,6 +736,12 @@
         </member>
         <member name="P:SimpleAuth.DiscoveryDocument.DPopSigningAlgValuesSupported">
             <summary>DPoP signing algorithms supported (RFC 9449).</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.RequestParameterSupported">
+            <summary>Whether JAR <c>request</c> parameter is supported (RFC 9101).</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.RequestUriParameterSupported">
+            <summary>Whether JAR <c>request_uri</c> by-reference is supported (RFC 9101).</summary>
         </member>
         <member name="T:SimpleAuth.UserInfoResponse">
             <summary>UserInfo endpoint response per OIDC Core §5.3.</summary>

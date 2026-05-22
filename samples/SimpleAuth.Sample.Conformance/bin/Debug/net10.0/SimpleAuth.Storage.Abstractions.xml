@@ -200,6 +200,13 @@
         <member name="P:SimpleAuth.ClaimsEnrichmentContext.GrantedScopes">
             <summary>Scopes that were granted to this request.</summary>
         </member>
+        <member name="P:SimpleAuth.ClaimsEnrichmentContext.RequestedClaims">
+            <summary>
+            Claim names explicitly requested via the OIDC <c>claims</c> request parameter (§5.5).
+            These claims SHOULD be returned in the UserInfo response even if their scope was not requested.
+            Empty when the <c>claims</c> parameter was not used.
+            </summary>
+        </member>
         <member name="P:SimpleAuth.ClaimsEnrichmentContext.Claims">
             <summary>
             Claims produced by this enrichment run.
@@ -637,6 +644,13 @@
         <member name="P:SimpleAuth.AuthorizationCode.SessionId">
             <summary>Session identifier from the user's authentication session.</summary>
         </member>
+        <member name="P:SimpleAuth.AuthorizationCode.RequestedUserInfoClaims">
+            <summary>
+            Claim names explicitly requested via the OIDC <c>claims</c> request parameter (§5.5)
+            for the userinfo endpoint. Populated from <c>claims.userinfo</c> in the authorization request.
+            Empty when the parameter was not used.
+            </summary>
+        </member>
         <member name="P:SimpleAuth.AuthorizationCode.IsConsumed">
             <summary>Whether this code has been consumed. Used for replay detection.</summary>
         </member>
@@ -730,6 +744,13 @@
             JWK thumbprint (RFC 7638) of the DPoP public key bound to this token.
             Non-null only when the token was issued with a <c>DPoP</c> header (RFC 9449).
             When set, resource endpoints MUST require a matching DPoP proof.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.IssuedToken.RequestedUserInfoClaims">
+            <summary>
+            Claim names explicitly requested via the OIDC <c>claims</c> request parameter (§5.5)
+            for the userinfo endpoint. Carried forward from the authorization code so the UserInfo
+            endpoint can return those claims even when the corresponding scope was not requested.
             </summary>
         </member>
         <member name="T:SimpleAuth.UserConsent">

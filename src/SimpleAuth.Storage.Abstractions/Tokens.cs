@@ -103,6 +103,13 @@ public sealed class AuthorizationCode
     /// <summary>Session identifier from the user's authentication session.</summary>
     public string? SessionId { get; init; }
 
+    /// <summary>
+    /// Claim names explicitly requested via the OIDC <c>claims</c> request parameter (§5.5)
+    /// for the userinfo endpoint. Populated from <c>claims.userinfo</c> in the authorization request.
+    /// Empty when the parameter was not used.
+    /// </summary>
+    public IReadOnlyList<string> RequestedUserInfoClaims { get; init; } = [];
+
     /// <summary>Whether this code has been consumed. Used for replay detection.</summary>
     public bool IsConsumed { get; init; }
 }
@@ -199,6 +206,13 @@ public sealed class IssuedToken
     /// When set, resource endpoints MUST require a matching DPoP proof.
     /// </summary>
     public string? JktThumbprint { get; init; }
+
+    /// <summary>
+    /// Claim names explicitly requested via the OIDC <c>claims</c> request parameter (§5.5)
+    /// for the userinfo endpoint. Carried forward from the authorization code so the UserInfo
+    /// endpoint can return those claims even when the corresponding scope was not requested.
+    /// </summary>
+    public IReadOnlyList<string> RequestedUserInfoClaims { get; init; } = [];
 }
 
 /// <summary>

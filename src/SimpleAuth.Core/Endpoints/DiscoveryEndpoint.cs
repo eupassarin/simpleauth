@@ -297,6 +297,9 @@ internal static class AuthorizationEndpoint
             acrValue = acrValuesStr.Split(' ', StringSplitOptions.RemoveEmptyEntries)[0];
         }
 
+        // OIDC Core §5.5 — parse the 'claims' request parameter to capture explicitly requested userinfo claims.
+        IReadOnlyList<string> requestedUserInfoClaims = ParseRequestedUserInfoClaims(ReadParameter(context, "claims"));
+
         var code = new AuthorizationCode
         {
             Code = CreateOpaqueHandle(),
@@ -310,6 +313,7 @@ internal static class AuthorizationEndpoint
             Nonce = string.IsNullOrWhiteSpace(nonce) ? null : nonce,
             AuthTime = codeAuthTime,
             AcrValue = acrValue,
+            RequestedUserInfoClaims = requestedUserInfoClaims,
         };
 
         IAuthorizationCodeStore codeStore = context.RequestServices.GetRequiredService<IAuthorizationCodeStore>();
@@ -428,6 +432,40 @@ internal static class AuthorizationEndpoint
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
         context.Response.ContentType = "application/json; charset=utf-8";
         await JsonResponseWriter.WriteAsync(context, new ErrorResponse(error, description), AuthJsonContext.Default.ErrorResponse);
+    }
+
+    /// <summary>
+    /// Parses the OIDC §5.5 <c>claims</c> JSON parameter and returns the userinfo claim names requested.
+    /// Returns an empty list if the parameter is absent, malformed, or has no userinfo entries.
+    /// </summary>
+    private static IReadOnlyList<string> ParseRequestedUserInfoClaims(string claimsJson)
+    {
+        if (string.IsNullOrWhiteSpace(claimsJson))
+        {
+            return [];
+        }
+
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(claimsJson);
+            if (!doc.RootElement.TryGetProperty("userinfo", out System.Text.Json.JsonElement userinfo)
+                || userinfo.ValueKind != System.Text.Json.JsonValueKind.Object)
+            {
+                return [];
+            }
+
+            var names = new List<string>();
+            foreach (System.Text.Json.JsonProperty prop in userinfo.EnumerateObject())
+            {
+                names.Add(prop.Name);
+            }
+
+            return names.Count == 0 ? [] : names;
+        }
+        catch
+        {
+            return [];
+        }
     }
 
     private static string BuildFormPostHtml(string redirectUri, string code, string state, string issuer)
