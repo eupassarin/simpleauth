@@ -236,6 +236,22 @@ public sealed class DiscoveryConformanceTests(ConformanceFixture fixture) : ICla
         Assert.False(key.TryGetProperty("d", out _), "JWKS must NOT expose private key 'd' parameter");
     }
 
+    [Fact]
+    public async Task Discovery_RequestParameterSupported_IsFalse()
+    {
+        using JsonDocument doc = await GetDiscoveryAsync();
+        Assert.True(doc.RootElement.TryGetProperty("request_parameter_supported", out JsonElement v));
+        Assert.False(v.GetBoolean());
+    }
+
+    [Fact]
+    public async Task Discovery_RequestUriParameterSupported_IsFalse()
+    {
+        using JsonDocument doc = await GetDiscoveryAsync();
+        Assert.True(doc.RootElement.TryGetProperty("request_uri_parameter_supported", out JsonElement v));
+        Assert.False(v.GetBoolean());
+    }
+
     private async Task<JsonDocument> GetDiscoveryAsync()
     {
         HttpResponseMessage response = await Client.GetAsync("/.well-known/openid-configuration");

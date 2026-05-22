@@ -204,6 +204,24 @@ public sealed class AuthorizationEndpointConformanceTests(ConformanceFixture fix
         Assert.NotEqual(code1, code2);
     }
 
+    [Fact]
+    public async Task Authorize_RejectsRequestObjectWithRequestNotSupported()
+    {
+        // RFC 9101: server does not support JAR request objects → must return request_not_supported.
+        string state = "test-state-jar";
+        string fakeJar = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ0ZXN0In0."; // alg=none JWT stub
+        string url = $"/connect/authorize?response_type=code&client_id=public-spa" +
+                     $"&redirect_uri={Uri.EscapeDataString("https://spa.example/callback")}" +
+                     $"&scope=openid&state={state}&request={Uri.EscapeDataString(fakeJar)}";
+
+        using HttpRequestMessage req = TestHelpers.AuthorizeRequest(url, "alice");
+        HttpResponseMessage resp = await Client.SendAsync(req);
+
+        Assert.Equal(HttpStatusCode.Found, resp.StatusCode);
+        string? error = TestHelpers.GetQueryParam(resp.Headers.Location!.ToString(), "error");
+        Assert.Equal("request_not_supported", error);
+    }
+
     private static string BuildAuthorizeUrl(string clientId, string redirectUri, string scope, string codeChallenge) =>
         $"/connect/authorize?response_type=code&client_id={clientId}" +
         $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +

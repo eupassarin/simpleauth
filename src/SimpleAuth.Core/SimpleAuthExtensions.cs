@@ -225,6 +225,8 @@ public static class SimpleAuthExtensions
             PushedAuthorizationRequestEndpoint = configuration.Par.Enabled ? $"{baseUrl}/connect/par" : null,
             RequirePushedAuthorizationRequests = configuration.Par.Enabled && configuration.Par.Required ? true : null,
             DPopSigningAlgValuesSupported = ["ES256", "ES384", "RS256", "RS384", "PS256"],
+            RequestParameterSupported = false,
+            RequestUriParameterSupported = false,
         };
 
         return new ReadOnlyMemory<byte>(JsonSerializer.SerializeToUtf8Bytes(document, AuthJsonContext.Default.DiscoveryDocument));

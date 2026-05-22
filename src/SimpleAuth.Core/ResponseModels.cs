@@ -112,6 +112,14 @@ public sealed record DiscoveryDocument
     /// <summary>DPoP signing algorithms supported (RFC 9449).</summary>
     [JsonPropertyName("dpop_signing_alg_values_supported")]
     public IReadOnlyList<string>? DPopSigningAlgValuesSupported { get; init; }
+
+    /// <summary>Whether JAR <c>request</c> parameter is supported (RFC 9101).</summary>
+    [JsonPropertyName("request_parameter_supported")]
+    public bool? RequestParameterSupported { get; init; }
+
+    /// <summary>Whether JAR <c>request_uri</c> by-reference is supported (RFC 9101).</summary>
+    [JsonPropertyName("request_uri_parameter_supported")]
+    public bool? RequestUriParameterSupported { get; init; }
 }
 
 /// <summary>UserInfo endpoint response per OIDC Core §5.3.</summary>

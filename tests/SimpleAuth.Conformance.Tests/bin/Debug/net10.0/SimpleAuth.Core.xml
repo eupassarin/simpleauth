@@ -725,6 +725,12 @@
         <member name="P:SimpleAuth.DiscoveryDocument.DPopSigningAlgValuesSupported">
             <summary>DPoP signing algorithms supported (RFC 9449).</summary>
         </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.RequestParameterSupported">
+            <summary>Whether JAR <c>request</c> parameter is supported (RFC 9101).</summary>
+        </member>
+        <member name="P:SimpleAuth.DiscoveryDocument.RequestUriParameterSupported">
+            <summary>Whether JAR <c>request_uri</c> by-reference is supported (RFC 9101).</summary>
+        </member>
         <member name="T:SimpleAuth.UserInfoResponse">
             <summary>UserInfo endpoint response per OIDC Core §5.3.</summary>
         </member>

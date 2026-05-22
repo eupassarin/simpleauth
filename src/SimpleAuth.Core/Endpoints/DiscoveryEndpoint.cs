@@ -157,6 +157,18 @@ internal static class AuthorizationEndpoint
             return;
         }
 
+        // RFC 9101 (JAR): if a request object is present and JAR is not supported, return request_not_supported.
+        // Only applies to direct (non-PAR) requests; PAR was already consumed above.
+        if (string.IsNullOrWhiteSpace(requestUri))
+        {
+            string requestObject = ReadParameter(context, "request");
+            if (!string.IsNullOrWhiteSpace(requestObject))
+            {
+                await RedirectOrErrorAsync(context, redirectUri, state, "request_not_supported", "JWT request objects are not supported. Use PAR (request_uri) instead.", serverState.Issuer);
+                return;
+            }
+        }
+
         if (client.RequirePkce && (!PkceValidator.IsMethodAllowed(codeChallengeMethod) || string.IsNullOrWhiteSpace(codeChallenge)))
         {
             await RedirectOrErrorAsync(context, redirectUri, state, "invalid_request", "PKCE S256 is required.", serverState.Issuer);
