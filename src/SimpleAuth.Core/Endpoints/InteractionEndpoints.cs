@@ -108,7 +108,8 @@ internal static class InteractionEndpoints
             return;
         }
 
-        // Parse the authorize request parameters from returnUrl to show scope info
+        // Parse the authorize request parameters from returnUrl to show scope info.
+        // Validate client_id against the store to prevent UI spoofing via crafted returnUrl.
         string clientId = "";
         string scopeValue = "";
         if (returnUrl.Contains('?'))
@@ -116,6 +117,20 @@ internal static class InteractionEndpoints
             var queryString = QueryHelpers.ParseQuery(returnUrl.Split('?', 2)[1]);
             clientId = queryString.TryGetValue("client_id", out var cid) ? cid.ToString() : "";
             scopeValue = queryString.TryGetValue("scope", out var sc) ? sc.ToString() : "";
+        }
+
+        // Verify the client_id is real — reject consent for spoofed/unknown clients.
+        if (!string.IsNullOrWhiteSpace(clientId))
+        {
+            IClientStore clientStore = context.RequestServices.GetRequiredService<IClientStore>();
+            Client? client = await clientStore.FindByClientIdAsync(clientId, context.RequestAborted);
+            if (client is null || !client.Enabled)
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                context.Response.ContentType = "text/html; charset=utf-8";
+                await context.Response.WriteAsync("<!DOCTYPE html><html><body><p>Invalid client.</p></body></html>");
+                return;
+            }
         }
 
         if (HttpMethods.IsGet(context.Request.Method))
@@ -168,7 +183,12 @@ internal static class InteractionEndpoints
     }
 
     private static bool IsLocalUrl(string url) =>
-        !string.IsNullOrWhiteSpace(url) && url.StartsWith('/') && !url.StartsWith("//");
+        !string.IsNullOrWhiteSpace(url)
+        && url.StartsWith('/')
+        && !url.StartsWith("//")
+        && !url.Contains('\\')
+        && !url.Contains('\n')
+        && !url.Contains('\r');
 
     private static string BuildLoginHtml(string returnUrl, string? error = null)
     {

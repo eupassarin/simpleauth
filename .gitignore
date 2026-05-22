@@ -27,3 +27,11 @@ nohup.out
 *.pfx
 *.p12
 appsettings.*.local.json
+
+# Test results
+TestResults/
+coverage/
+*.trx
+
+# BenchmarkDotNet
+BenchmarkDotNet.Artifacts/

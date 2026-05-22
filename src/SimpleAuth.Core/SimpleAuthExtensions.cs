@@ -70,7 +70,7 @@ public static class SimpleAuthExtensions
                     options.Cookie.Name = "SimpleAuth.Session";
                     options.Cookie.HttpOnly = true;
                     options.Cookie.SameSite = SameSiteMode.Lax;
-                    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
                     options.ExpireTimeSpan = TimeSpan.FromHours(8);
                 });
         }

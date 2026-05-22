@@ -10,6 +10,7 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <Version>0.1.0-local</Version>
     <Authors>SimpleAuth Contributors</Authors>
     <Company>SimpleAuth</Company>
     <Product>SimpleAuth</Product>
