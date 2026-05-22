@@ -254,7 +254,13 @@ internal static class AuthorizationEndpoint
                 // No cookie handler registered — non-fatal.
             }
 
-            string returnUrlLogin = context.Request.Path + context.Request.QueryString;
+            // Strip 'prompt' from the returnUrl so after login the authorize endpoint
+            // does not see prompt=login again and sign the user out in an infinite loop.
+            var qs = Microsoft.AspNetCore.Http.QueryString.Create(
+                context.Request.Query
+                    .Where(kv => !string.Equals(kv.Key, "prompt", StringComparison.OrdinalIgnoreCase))
+                    .Select(kv => new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(kv.Key, kv.Value)));
+            string returnUrlLogin = context.Request.Path + qs;
             string loginUrlForce = $"{cfg.Interaction.LoginPath}?{Uri.EscapeDataString(cfg.Interaction.ReturnUrlParameter)}={Uri.EscapeDataString(returnUrlLogin)}";
             context.Response.StatusCode = StatusCodes.Status302Found;
             context.Response.Headers.Location = loginUrlForce;
