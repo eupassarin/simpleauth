@@ -289,15 +289,18 @@ app.MapGet("/", (HttpContext httpContext) =>
 <!DOCTYPE html>
 <html>
 <head><title>SimpleAuth — Conformance Suite Deployment</title>
+<meta http-equiv="refresh" content="8">
 <style>body{font-family:system-ui;max-width:700px;margin:2rem auto;padding:1rem;background:#111;color:#eee}
 h1{color:#60a5fa}code{background:#222;padding:0.2rem 0.4rem;border-radius:3px;font-size:0.9rem}
 a{color:#60a5fa}pre{background:#1a1a2e;padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.8rem}
 .card{background:#1a1d27;border:1px solid #2d3248;border-radius:8px;padding:1.5rem;margin:1rem 0}
 .badge{display:inline-block;padding:0.2rem 0.5rem;border-radius:3px;font-size:0.75rem;font-weight:600;background:rgba(34,197,94,0.15);color:#22c55e}
+.step{background:#0f172a;border-left:4px solid #3b82f6;padding:0.6rem 1rem;margin:0.4rem 0;border-radius:0 4px 4px 0}
 </style></head>
 <body>
 <h1>⚡ SimpleAuth Conformance Suite</h1>
-<p>This server is configured for the <a href="https://www.certification.openid.net/">OpenID Foundation Conformance Suite</a>.</p>
+<p>This server is configured for the <a href="https://www.certification.openid.net/">OpenID Foundation Conformance Suite</a>.
+<small style="color:#6b7280">(page auto-refreshes every 8s)</small></p>
 
 {{sessionBanner}}
 
@@ -346,14 +349,21 @@ Server metadata URL: {{issuer}}/.well-known/openid-configuration
 Client ID:          simpleauth-basic
 Client Secret:      conformance-secret-basic
 </pre></li>
-<li>Run the tests — when prompted to login, enter <code>{{testUserSub}}</code> as username</li>
-<li style="background:#1a0a00;border-left:3px solid #f59e0b;padding:0.5rem 1rem;list-style:none;border-radius:0 4px 4px 0">
-  ⚠️ <strong>For <code>oidcc-prompt-none-not-logged-in</code>:</strong> visit
-  <a href="/autologout"><strong>/autologout</strong></a> in the <strong>same browser</strong> the conformance suite uses,
-  then immediately run that specific test. The session banner at the top of this page shows your current status.
-</li>
-<li>All tests should pass for the Basic OP profile ✅</li>
+<li>Run the plan — when prompted to login, enter <code>{{testUserSub}}</code> as username</li>
+<li>All tests should pass <strong>except <code>oidcc-prompt-none-not-logged-in</code></strong> which requires a manual logout step (see below)</li>
 </ol>
+</div>
+
+<div class="card" style="border-color:#f59e0b">
+<h3 style="color:#fbbf24">⚠️ Special Steps for <code>oidcc-prompt-none-not-logged-in</code></h3>
+<p style="font-size:0.85rem;margin:0 0 0.5rem">This test requires the browser to have <strong>no active session</strong>. Since the OIDF suite reuses a single browser session for all tests, earlier tests (like the basic code flow) leave a session cookie behind — causing this test to fail if run in the normal sequence.</p>
+<p style="font-size:0.85rem;font-weight:600;margin:0.5rem 0">✅ Correct workflow:</p>
+<div class="step">1️⃣ &nbsp;Run the full test plan. Let <code>oidcc-prompt-none-not-logged-in</code> fail (expected)</div>
+<div class="step">2️⃣ &nbsp;In the <strong>same browser the OIDF suite uses</strong>, open this page → check the session banner above (it auto-refreshes)</div>
+<div class="step">3️⃣ &nbsp;If you see <span style="color:#ef4444">🔴 ACTIVE SESSION</span>, click <a href="/autologout"><strong>LOGOUT NOW</strong></a>. Banner should turn 🟢 green</div>
+<div class="step">4️⃣ &nbsp;Return to the OIDF suite → click <code>oidcc-prompt-none-not-logged-in</code> → click <strong>"Retest"</strong></div>
+<div class="step">5️⃣ &nbsp;Test should now pass with <code>login_required</code> ✅</div>
+<p style="font-size:0.8rem;color:#9ca3af;margin-top:0.75rem">💡 <strong>Why this is correct:</strong> Per OIDC Core §3.1.2.6, <code>prompt=none</code> returns <code>login_required</code> only when the user is NOT authenticated. Our server correctly returns an auth code when the user IS authenticated. The test just needs to start with a clean session.</p>
 </div>
 
 <div class="card">
