@@ -222,6 +222,79 @@ public sealed class AuthorizationEndpointConformanceTests(ConformanceFixture fix
         Assert.Equal("request_not_supported", error);
     }
 
+    [Fact]
+    public async Task Authorize_PostFormBody_RedirectsToLoginWithAllParams()
+    {
+        // OIDC Core §3.1.2.1: Authorization Servers MUST support GET and POST at the authorization endpoint.
+        // When POST is used with application/x-www-form-urlencoded body, params must not be lost.
+        // The bug: POST form body caused an empty returnUrl → after login, params were gone → unsupported_response_type.
+        string verifier0 = TestHelpers.GenerateCodeVerifier();
+        string challenge0 = TestHelpers.ComputeS256Challenge(verifier0);
+        var formParams = new Dictionary<string, string>
+        {
+            ["response_type"] = "code",
+            ["client_id"] = "public-spa",
+            ["redirect_uri"] = "https://spa.example/callback",
+            ["scope"] = "openid",
+            ["state"] = "post-state",
+            ["nonce"] = "post-nonce",
+            ["code_challenge"] = challenge0,
+            ["code_challenge_method"] = "S256",
+        };
+
+        using HttpRequestMessage req = new(HttpMethod.Post, "/connect/authorize")
+        {
+            Content = new FormUrlEncodedContent(formParams),
+        };
+        // No X-Test-User = unauthenticated → should redirect to login with full returnUrl
+
+        HttpResponseMessage resp = await Client.SendAsync(req);
+
+        // Must redirect to login (not return JSON error)
+        Assert.Equal(HttpStatusCode.Redirect, resp.StatusCode);
+        string location = resp.Headers.Location!.ToString();
+
+        // Must contain returnUrl (redirected to login)
+        Assert.Contains("returnUrl", location);
+        // All form params must be encoded in the returnUrl
+        Assert.Contains("response_type", location);
+        Assert.Contains("client_id", location);
+    }
+
+    [Fact]
+    public async Task Authorize_PostFormBody_WithAuthentication_ReturnsCode()
+    {
+        // POST to authorize with form body and authenticated user must issue a code.
+        string verifier = TestHelpers.GenerateCodeVerifier();
+        string challenge = TestHelpers.ComputeS256Challenge(verifier);
+
+        var formParams = new Dictionary<string, string>
+        {
+            ["response_type"] = "code",
+            ["client_id"] = "public-spa",
+            ["redirect_uri"] = "https://spa.example/callback",
+            ["scope"] = "openid",
+            ["state"] = "s-post",
+            ["nonce"] = "n-post",
+            ["code_challenge"] = challenge,
+            ["code_challenge_method"] = "S256",
+        };
+
+        using HttpRequestMessage req = new(HttpMethod.Post, "/connect/authorize")
+        {
+            Content = new FormUrlEncodedContent(formParams),
+        };
+        req.Headers.Add("X-Test-User", "alice");
+
+        HttpResponseMessage resp = await Client.SendAsync(req);
+
+        Assert.Equal(HttpStatusCode.Redirect, resp.StatusCode);
+        string? code = TestHelpers.GetQueryParam(resp.Headers.Location!.ToString(), "code");
+        Assert.NotNull(code);
+        Assert.NotEmpty(code);
+    }
+
+
     private static string BuildAuthorizeUrl(string clientId, string redirectUri, string scope, string codeChallenge) =>
         $"/connect/authorize?response_type=code&client_id={clientId}" +
         $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +

@@ -219,8 +219,22 @@ internal static class AuthorizationEndpoint
                 return;
             }
 
-            // Redirect to login page with returnUrl
-            string returnUrl = context.Request.Path + context.Request.QueryString;
+            // Redirect to login page with returnUrl.
+            // For POST requests with a form body, params are in the body (not query string),
+            // so we reconstruct the returnUrl by encoding them as a query string.
+            string returnUrl;
+            if (HttpMethods.IsPost(context.Request.Method) && context.Request.HasFormContentType
+                && context.Request.QueryString == QueryString.Empty)
+            {
+                // Re-encode form params as query string so the returnUrl survives the login redirect
+                var qs = QueryString.Create(
+                    context.Request.Form.Select(kv => new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(kv.Key, kv.Value)));
+                returnUrl = context.Request.Path + qs;
+            }
+            else
+            {
+                returnUrl = context.Request.Path + context.Request.QueryString;
+            }
             string loginUrl = $"{cfg.Interaction.LoginPath}?{Uri.EscapeDataString(cfg.Interaction.ReturnUrlParameter)}={Uri.EscapeDataString(returnUrl)}";
             context.Response.StatusCode = StatusCodes.Status302Found;
             context.Response.Headers.Location = loginUrl;
