@@ -268,4 +268,53 @@ public sealed class TokenEndpointConformanceTests(ConformanceFixture fixture) : 
         Assert.DoesNotContain(" ", errorCode);
         Assert.All(errorCode!, c => Assert.True(c < 128, "Error code must be ASCII"));
     }
+
+    // ── RFC 6749 §4.1.2: auth code reuse + token revocation ─────────────────
+
+    [Fact]
+    public async Task AuthCode_Reuse_RevokesTokenAndReturnsError()
+    {
+        // RFC 6749 §4.1.2: if a code is used more than once the AS MUST return an error
+        // and SHOULD revoke all tokens previously issued for that code.
+        // Using public-spa (reference tokens) so revocation is observable at UserInfo.
+        const string clientId = "public-spa";
+        const string redirectUri = "https://spa.example/callback";
+
+        string verifier = TestHelpers.GenerateCodeVerifier();
+        string challenge = TestHelpers.ComputeS256Challenge(verifier);
+
+        // Step 1: get an authorization code
+        string authorizeUrl = $"/connect/authorize?response_type=code&client_id={clientId}" +
+            $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+            $"&scope=openid&state=s&nonce=n" +
+            $"&code_challenge={challenge}&code_challenge_method=S256";
+
+        using HttpRequestMessage authorizeReq = TestHelpers.AuthorizeRequest(authorizeUrl, "alice");
+        HttpResponseMessage authorizeResp = await Client.SendAsync(authorizeReq);
+        string code = TestHelpers.GetQueryParam(
+            authorizeResp.Headers.Location!.ToString(), "code")!;
+
+        // Step 2: first exchange → should succeed
+        string body = $"grant_type=authorization_code&code={Uri.EscapeDataString(code)}" +
+                      $"&redirect_uri={Uri.EscapeDataString(redirectUri)}&code_verifier={verifier}" +
+                      $"&client_id={clientId}";
+        HttpResponseMessage firstResp = await Client.PostAsync("/connect/token", TestHelpers.Form(body));
+        Assert.Equal(HttpStatusCode.OK, firstResp.StatusCode);
+        using JsonDocument firstDoc = await TestHelpers.ParseJsonAsync(firstResp);
+        string accessToken = firstDoc.RootElement.GetProperty("access_token").GetString()!;
+
+        // Step 3: reuse the same code → MUST return invalid_grant
+        HttpResponseMessage reuseResp = await Client.PostAsync("/connect/token", TestHelpers.Form(body));
+        Assert.Equal(HttpStatusCode.BadRequest, reuseResp.StatusCode);
+        using JsonDocument reuseDoc = await TestHelpers.ParseJsonAsync(reuseResp);
+        Assert.Equal("invalid_grant", reuseDoc.RootElement.GetProperty("error").GetString());
+
+        // Step 4: the original access token MUST now be revoked (4xx at UserInfo)
+        using HttpRequestMessage userInfoReq = new(HttpMethod.Get, "/connect/userinfo");
+        userInfoReq.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        HttpResponseMessage userInfoResp = await Client.SendAsync(userInfoReq);
+        Assert.True(
+            (int)userInfoResp.StatusCode is >= 400 and <= 499,
+            $"Expected 4xx after token revocation, got {(int)userInfoResp.StatusCode}");
+    }
 }

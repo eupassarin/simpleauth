@@ -42,28 +42,42 @@ internal sealed class EfAuthorizationCodeStore : IAuthorizationCodeStore
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<AuthorizationCode?> ConsumeAsync(string codeHandle, CancellationToken cancellationToken = default)
+    public async Task<CodeConsumeResult> ConsumeAsync(string codeHandle, CancellationToken cancellationToken = default)
     {
         using IDbContextTransaction tx = await _context.Database
             .BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
             .ConfigureAwait(false);
 
+        // Find the code regardless of IsConsumed, so we can detect reuse.
         AuthorizationCodeEntity? entity = await _context.AuthorizationCodes
-            .Where(c => c.Handle == codeHandle && !c.IsConsumed && c.ExpiresAt > DateTime.UtcNow)
+            .Where(c => c.Handle == codeHandle)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
 
         if (entity is null)
         {
             await tx.RollbackAsync(cancellationToken).ConfigureAwait(false);
-            return null;
+            return CodeConsumeResult.Invalid;
+        }
+
+        if (entity.IsConsumed)
+        {
+            // Replay attack — code was already consumed.
+            await tx.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            return CodeConsumeResult.Reused(entity.SubjectId, entity.ClientId);
+        }
+
+        if (entity.ExpiresAt <= DateTime.UtcNow)
+        {
+            await tx.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            return CodeConsumeResult.Invalid;
         }
 
         entity.IsConsumed = true;
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         await tx.CommitAsync(cancellationToken).ConfigureAwait(false);
 
-        return MapToModel(entity);
+        return CodeConsumeResult.Success(MapToModel(entity));
     }
 
     public async Task RemoveAllAsync(string subjectId, string clientId, CancellationToken cancellationToken = default)
@@ -218,6 +232,7 @@ internal sealed class EfTokenStore : ITokenStore
             ExpiresAt = token.ExpiresAt,
             IsRevoked = false,
             RefreshTokenHandle = token.RefreshTokenHandle,
+            AuthorizationCodeHandle = token.AuthorizationCodeHandle,
             JktThumbprint = token.JktThumbprint,
         };
 
@@ -259,6 +274,14 @@ internal sealed class EfTokenStore : ITokenStore
             .ConfigureAwait(false);
     }
 
+    public async Task RevokeByAuthCodeHandleAsync(string authorizationCodeHandle, CancellationToken cancellationToken = default)
+    {
+        await _context.IssuedTokens
+            .Where(t => t.AuthorizationCodeHandle == authorizationCodeHandle)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(t => t.IsRevoked, true), cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     private static IssuedToken MapToModel(IssuedTokenEntity e) => new()
     {
         Handle = e.Handle,
@@ -269,6 +292,7 @@ internal sealed class EfTokenStore : ITokenStore
         ExpiresAt = e.ExpiresAt,
         IsRevoked = e.IsRevoked,
         RefreshTokenHandle = e.RefreshTokenHandle,
+        AuthorizationCodeHandle = e.AuthorizationCodeHandle,
         JktThumbprint = e.JktThumbprint,
     };
 }

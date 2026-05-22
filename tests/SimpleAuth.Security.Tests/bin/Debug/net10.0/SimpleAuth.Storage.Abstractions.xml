@@ -317,12 +317,14 @@
         <member name="M:SimpleAuth.IAuthorizationCodeStore.ConsumeAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Atomically retrieves and marks a code as consumed.
-            Returns <see langword="null"/> if the code is not found, already consumed, or expired.
+            Returns <see cref="M:SimpleAuth.CodeConsumeResult.Success(SimpleAuth.AuthorizationCode)"/> with the code if valid and not yet consumed.
+            Returns <see cref="M:SimpleAuth.CodeConsumeResult.Reused(System.String,System.String)"/> (with SubjectId/ClientId) if the code was previously consumed — caller SHOULD revoke associated tokens.
+            Returns <see cref="P:SimpleAuth.CodeConsumeResult.Invalid"/> if the code was never issued or has expired.
             </summary>
             <remarks>
             This operation MUST be atomic. Implementations using SQL should use a single
             <c>UPDATE ... OUTPUT</c> or equivalent. Implementations using Redis should use a Lua script.
-            A second call with the same handle MUST return <see langword="null"/>.
+            A second call with the same handle MUST return <see cref="M:SimpleAuth.CodeConsumeResult.Reused(System.String,System.String)"/>.
             </remarks>
         </member>
         <member name="M:SimpleAuth.IAuthorizationCodeStore.RemoveAllAsync(System.String,System.String,System.Threading.CancellationToken)">
@@ -390,6 +392,13 @@
         </member>
         <member name="M:SimpleAuth.ITokenStore.RevokeAllAsync(System.String,System.String,System.Threading.CancellationToken)">
             <summary>Revokes all access tokens for the given subject and client (e.g., on logout).</summary>
+        </member>
+        <member name="M:SimpleAuth.ITokenStore.RevokeByAuthCodeHandleAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Revokes all access tokens issued from the given authorization code.
+            Called when code reuse is detected (RFC 6749 §4.1.2): the server SHOULD revoke
+            all tokens that were issued as a result of that authorization code.
+            </summary>
         </member>
         <member name="T:SimpleAuth.Scope">
             <summary>
@@ -537,6 +546,48 @@
         <member name="P:SimpleAuth.Resources.Standard">
             <summary>The minimal set of standard identity scopes: openid, profile, email.</summary>
         </member>
+        <member name="T:SimpleAuth.CodeConsumeStatus">
+            <summary>
+            Possible outcomes when consuming an authorization code.
+            </summary>
+        </member>
+        <member name="F:SimpleAuth.CodeConsumeStatus.Success">
+            <summary>Code was valid and has been consumed successfully.</summary>
+        </member>
+        <member name="F:SimpleAuth.CodeConsumeStatus.Reused">
+            <summary>
+            Code was already consumed by a previous request — replay/reuse attack detected.
+            Per RFC 6749 §4.1.2 the server SHOULD revoke all tokens previously issued for this code.
+            <see cref="P:SimpleAuth.CodeConsumeResult.SubjectId"/> and <see cref="P:SimpleAuth.CodeConsumeResult.ClientId"/> are available for revocation.
+            </summary>
+        </member>
+        <member name="F:SimpleAuth.CodeConsumeStatus.Invalid">
+            <summary>Code was not found, was never issued, or has already expired.</summary>
+        </member>
+        <member name="T:SimpleAuth.CodeConsumeResult">
+            <summary>Result of an authorization code consume operation.</summary>
+        </member>
+        <member name="P:SimpleAuth.CodeConsumeResult.Invalid">
+            <summary>Code was not found, never issued, or expired. No revocation needed.</summary>
+        </member>
+        <member name="P:SimpleAuth.CodeConsumeResult.Status">
+            <summary>Outcome of the consume attempt.</summary>
+        </member>
+        <member name="P:SimpleAuth.CodeConsumeResult.Code">
+            <summary>The consumed authorization code. Non-null only when <see cref="P:SimpleAuth.CodeConsumeResult.Status"/> is <see cref="F:SimpleAuth.CodeConsumeStatus.Success"/>.</summary>
+        </member>
+        <member name="P:SimpleAuth.CodeConsumeResult.SubjectId">
+            <summary>Subject identifier from the original grant. Non-null when <see cref="P:SimpleAuth.CodeConsumeResult.Status"/> is <see cref="F:SimpleAuth.CodeConsumeStatus.Reused"/>.</summary>
+        </member>
+        <member name="P:SimpleAuth.CodeConsumeResult.ClientId">
+            <summary>Client identifier from the original grant. Non-null when <see cref="P:SimpleAuth.CodeConsumeResult.Status"/> is <see cref="F:SimpleAuth.CodeConsumeStatus.Reused"/>.</summary>
+        </member>
+        <member name="M:SimpleAuth.CodeConsumeResult.Success(SimpleAuth.AuthorizationCode)">
+            <summary>Creates a successful consume result.</summary>
+        </member>
+        <member name="M:SimpleAuth.CodeConsumeResult.Reused(System.String,System.String)">
+            <summary>Creates a reuse-detected result with subject/client for token revocation.</summary>
+        </member>
         <member name="T:SimpleAuth.AuthorizationCode">
             <summary>
             An authorization code issued at the end of the authorize endpoint redirect.
@@ -664,6 +715,14 @@
             <summary>
             Handle of the refresh token this access token was issued alongside.
             Null if issued via client credentials or if no refresh token was issued.
+            </summary>
+        </member>
+        <member name="P:SimpleAuth.IssuedToken.AuthorizationCodeHandle">
+            <summary>
+            Handle of the authorization code that caused this token to be issued.
+            Null if issued via client credentials or refresh token grant.
+            Used for code-reuse revocation (RFC 6749 §4.1.2): when a code is used twice,
+            all tokens bearing this handle MUST be revoked.
             </summary>
         </member>
         <member name="P:SimpleAuth.IssuedToken.JktThumbprint">

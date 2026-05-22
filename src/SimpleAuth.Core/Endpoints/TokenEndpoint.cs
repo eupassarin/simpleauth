@@ -180,12 +180,23 @@ internal static class TokenEndpoint
             return;
         }
 
-        AuthorizationCode? authorizationCode = await authorizationCodeStore.ConsumeAsync(codeHandle, context.RequestAborted);
-        if (authorizationCode is null)
+        CodeConsumeResult consumeResult = await authorizationCodeStore.ConsumeAsync(codeHandle, context.RequestAborted);
+
+        if (consumeResult.Status == CodeConsumeStatus.Reused)
         {
-            await JsonErrorAsync(context, StatusCodes.Status400BadRequest, "invalid_grant", "the authorization code is invalid or already consumed.");
+            // RFC 6749 §4.1.2: code reuse detected — revoke all tokens issued from this code.
+            await tokenStore.RevokeByAuthCodeHandleAsync(codeHandle, context.RequestAborted);
+            await JsonErrorAsync(context, StatusCodes.Status400BadRequest, "invalid_grant", "the authorization code has already been used.");
             return;
         }
+
+        if (consumeResult.Status == CodeConsumeStatus.Invalid || consumeResult.Code is null)
+        {
+            await JsonErrorAsync(context, StatusCodes.Status400BadRequest, "invalid_grant", "the authorization code is invalid or expired.");
+            return;
+        }
+
+        AuthorizationCode authorizationCode = consumeResult.Code;
 
         if (!string.Equals(authorizationCode.ClientId, clientId, StringComparison.Ordinal) ||
             !string.Equals(authorizationCode.RedirectUri, redirectUri, StringComparison.Ordinal))
@@ -210,7 +221,7 @@ internal static class TokenEndpoint
             (refreshToken, refreshTokenHandle) = await IssueRefreshTokenAsync(context, refreshTokenStore, client, authorizationCode, authorizationCode.GrantedScopes, dpopJkt);
         }
 
-        string accessToken = await IssueAccessTokenAsync(context, state, tokenStore, jwt, client, authorizationCode.SubjectId, authorizationCode.GrantedScopes, refreshTokenHandle, dpopJkt);
+        string accessToken = await IssueAccessTokenAsync(context, state, tokenStore, jwt, client, authorizationCode.SubjectId, authorizationCode.GrantedScopes, refreshTokenHandle, dpopJkt, codeHandle);
 
         string? idToken = null;
         if (authorizationCode.GrantedScopes.Contains(StandardScope.OpenId, StringComparer.Ordinal))
@@ -432,7 +443,8 @@ internal static class TokenEndpoint
         string? subjectId,
         IReadOnlyList<string> grantedScopes,
         string? refreshTokenHandle = null,
-        string? dpopJkt = null)
+        string? dpopJkt = null,
+        string? authorizationCodeHandle = null)
     {
         if (client.AccessTokenType == AccessTokenType.Reference)
         {
@@ -446,6 +458,7 @@ internal static class TokenEndpoint
                 CreatedAt = DateTime.UtcNow,
                 ExpiresAt = DateTime.UtcNow.Add(client.AccessTokenLifetime),
                 RefreshTokenHandle = refreshTokenHandle,
+                AuthorizationCodeHandle = authorizationCodeHandle,
                 JktThumbprint = dpopJkt,
             };
 

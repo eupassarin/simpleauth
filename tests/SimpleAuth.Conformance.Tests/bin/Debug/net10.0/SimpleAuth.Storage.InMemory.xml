@@ -136,6 +136,9 @@
         <member name="M:SimpleAuth.InMemoryTokenStore.RevokeAllAsync(System.String,System.String,System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
+        <member name="M:SimpleAuth.InMemoryTokenStore.RevokeByAuthCodeHandleAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
         <member name="T:SimpleAuth.InMemorySigningKeyStore">
             <summary>
             In-memory <see cref="T:SimpleAuth.ISigningKeyStore"/> implementation.

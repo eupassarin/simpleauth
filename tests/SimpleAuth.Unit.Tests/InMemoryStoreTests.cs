@@ -22,12 +22,11 @@ public sealed class InMemoryStoreTests
 
         await store.StoreAsync(code);
 
-        AuthorizationCode? first = await store.ConsumeAsync("code-1");
-        AuthorizationCode? second = await store.ConsumeAsync("code-1");
+        CodeConsumeResult first = await store.ConsumeAsync("code-1");
+        CodeConsumeResult second = await store.ConsumeAsync("code-1");
 
-        Assert.NotNull(first);
-        Assert.Null(second);
-        Assert.True(first!.IsConsumed);
+        Assert.Equal(CodeConsumeStatus.Success, first.Status);
+        Assert.Equal(CodeConsumeStatus.Reused, second.Status);
     }
 
     [Fact]

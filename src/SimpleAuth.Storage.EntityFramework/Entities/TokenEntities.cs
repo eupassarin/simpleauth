@@ -98,6 +98,10 @@ internal sealed class IssuedTokenEntity
     [MaxLength(64)]
     public string? RefreshTokenHandle { get; set; }
 
+    /// <summary>Opaque handle of the authorization code that originated this token. Used for code-reuse revocation.</summary>
+    [MaxLength(200)]
+    public string? AuthorizationCodeHandle { get; set; }
+
     [MaxLength(128)]
     public string? JktThumbprint { get; set; }
 }

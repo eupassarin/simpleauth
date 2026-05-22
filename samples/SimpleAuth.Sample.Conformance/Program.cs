@@ -83,7 +83,7 @@ builder.Services.AddSimpleAuth(server =>
             AllowOfflineAccess = true,
             RequireConsent = false,
             TokenEndpointAuthMethod = AuthMethod.ClientSecretBasic,
-            AccessTokenType = AccessTokenType.Jwt,
+            AccessTokenType = AccessTokenType.Reference,
             ClientCredentials =
             [
                 new ClientCredential
@@ -124,7 +124,7 @@ builder.Services.AddSimpleAuth(server =>
             AllowOfflineAccess = true,
             RequireConsent = false,
             TokenEndpointAuthMethod = AuthMethod.ClientSecretPost,
-            AccessTokenType = AccessTokenType.Jwt,
+            AccessTokenType = AccessTokenType.Reference,
             ClientCredentials =
             [
                 new ClientCredential
@@ -163,7 +163,7 @@ builder.Services.AddSimpleAuth(server =>
             AllowOfflineAccess = true,
             RequireConsent = false,
             TokenEndpointAuthMethod = AuthMethod.None,
-            AccessTokenType = AccessTokenType.Jwt,
+            AccessTokenType = AccessTokenType.Reference,
         });
 
         // ── Client 4: Second client (used by some tests that need 2 clients) ──
@@ -187,7 +187,7 @@ builder.Services.AddSimpleAuth(server =>
             RequirePkce = false, // OIDC Basic profile tests do not always send PKCE for confidential clients
             RequireConsent = false,
             TokenEndpointAuthMethod = AuthMethod.ClientSecretBasic,
-            AccessTokenType = AccessTokenType.Jwt,
+            AccessTokenType = AccessTokenType.Reference,
             ClientCredentials =
             [
                 new ClientCredential

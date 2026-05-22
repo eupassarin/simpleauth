@@ -11,14 +11,16 @@ public interface IAuthorizationCodeStore
 
     /// <summary>
     /// Atomically retrieves and marks a code as consumed.
-    /// Returns <see langword="null"/> if the code is not found, already consumed, or expired.
+    /// Returns <see cref="CodeConsumeResult.Success"/> with the code if valid and not yet consumed.
+    /// Returns <see cref="CodeConsumeResult.Reused"/> (with SubjectId/ClientId) if the code was previously consumed — caller SHOULD revoke associated tokens.
+    /// Returns <see cref="CodeConsumeResult.Invalid"/> if the code was never issued or has expired.
     /// </summary>
     /// <remarks>
     /// This operation MUST be atomic. Implementations using SQL should use a single
     /// <c>UPDATE ... OUTPUT</c> or equivalent. Implementations using Redis should use a Lua script.
-    /// A second call with the same handle MUST return <see langword="null"/>.
+    /// A second call with the same handle MUST return <see cref="CodeConsumeResult.Reused"/>.
     /// </remarks>
-    Task<AuthorizationCode?> ConsumeAsync(string codeHandle, CancellationToken cancellationToken = default);
+    Task<CodeConsumeResult> ConsumeAsync(string codeHandle, CancellationToken cancellationToken = default);
 
     /// <summary>Removes all authorization codes for the given subject and client (e.g., on logout).</summary>
     Task RemoveAllAsync(string subjectId, string clientId, CancellationToken cancellationToken = default);
@@ -88,4 +90,11 @@ public interface ITokenStore
 
     /// <summary>Revokes all access tokens for the given subject and client (e.g., on logout).</summary>
     Task RevokeAllAsync(string subjectId, string clientId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Revokes all access tokens issued from the given authorization code.
+    /// Called when code reuse is detected (RFC 6749 §4.1.2): the server SHOULD revoke
+    /// all tokens that were issued as a result of that authorization code.
+    /// </summary>
+    Task RevokeByAuthCodeHandleAsync(string authorizationCodeHandle, CancellationToken cancellationToken = default);
 }

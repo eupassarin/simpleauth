@@ -1,6 +1,60 @@
 namespace SimpleAuth;
 
 /// <summary>
+/// Possible outcomes when consuming an authorization code.
+/// </summary>
+public enum CodeConsumeStatus
+{
+    /// <summary>Code was valid and has been consumed successfully.</summary>
+    Success,
+
+    /// <summary>
+    /// Code was already consumed by a previous request — replay/reuse attack detected.
+    /// Per RFC 6749 §4.1.2 the server SHOULD revoke all tokens previously issued for this code.
+    /// <see cref="CodeConsumeResult.SubjectId"/> and <see cref="CodeConsumeResult.ClientId"/> are available for revocation.
+    /// </summary>
+    Reused,
+
+    /// <summary>Code was not found, was never issued, or has already expired.</summary>
+    Invalid,
+}
+
+/// <summary>Result of an authorization code consume operation.</summary>
+public sealed class CodeConsumeResult
+{
+    /// <summary>Code was not found, never issued, or expired. No revocation needed.</summary>
+    public static CodeConsumeResult Invalid { get; } = new(CodeConsumeStatus.Invalid, null, null, null);
+
+    private CodeConsumeResult(CodeConsumeStatus status, AuthorizationCode? code, string? subjectId, string? clientId)
+    {
+        Status = status;
+        Code = code;
+        SubjectId = subjectId;
+        ClientId = clientId;
+    }
+
+    /// <summary>Outcome of the consume attempt.</summary>
+    public CodeConsumeStatus Status { get; }
+
+    /// <summary>The consumed authorization code. Non-null only when <see cref="Status"/> is <see cref="CodeConsumeStatus.Success"/>.</summary>
+    public AuthorizationCode? Code { get; }
+
+    /// <summary>Subject identifier from the original grant. Non-null when <see cref="Status"/> is <see cref="CodeConsumeStatus.Reused"/>.</summary>
+    public string? SubjectId { get; }
+
+    /// <summary>Client identifier from the original grant. Non-null when <see cref="Status"/> is <see cref="CodeConsumeStatus.Reused"/>.</summary>
+    public string? ClientId { get; }
+
+    /// <summary>Creates a successful consume result.</summary>
+    public static CodeConsumeResult Success(AuthorizationCode code) =>
+        new(CodeConsumeStatus.Success, code, null, null);
+
+    /// <summary>Creates a reuse-detected result with subject/client for token revocation.</summary>
+    public static CodeConsumeResult Reused(string subjectId, string clientId) =>
+        new(CodeConsumeStatus.Reused, null, subjectId, clientId);
+}
+
+/// <summary>
 /// An authorization code issued at the end of the authorize endpoint redirect.
 /// Codes are single-use — consuming the same code twice revokes all tokens in the grant (RFC 9700 §2.10).
 /// </summary>
@@ -130,6 +184,14 @@ public sealed class IssuedToken
     /// Null if issued via client credentials or if no refresh token was issued.
     /// </summary>
     public string? RefreshTokenHandle { get; init; }
+
+    /// <summary>
+    /// Handle of the authorization code that caused this token to be issued.
+    /// Null if issued via client credentials or refresh token grant.
+    /// Used for code-reuse revocation (RFC 6749 §4.1.2): when a code is used twice,
+    /// all tokens bearing this handle MUST be revoked.
+    /// </summary>
+    public string? AuthorizationCodeHandle { get; init; }
 
     /// <summary>
     /// JWK thumbprint (RFC 7638) of the DPoP public key bound to this token.

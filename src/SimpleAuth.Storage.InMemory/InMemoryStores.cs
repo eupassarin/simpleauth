@@ -273,25 +273,35 @@ public sealed class InMemoryAuthorizationCodeStore : IAuthorizationCodeStore
     }
 
     /// <inheritdoc />
-    public Task<AuthorizationCode?> ConsumeAsync(string codeHandle, CancellationToken cancellationToken = default)
+    public Task<CodeConsumeResult> ConsumeAsync(string codeHandle, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         lock (_gate)
         {
+            // Lazily remove codes that have expired well past their lifetime.
+            PurgeExpiredConsumedCodes();
+
             if (!_codes.TryGetValue(codeHandle, out AuthorizationCode? code))
             {
-                return Task.FromResult<AuthorizationCode?>(null);
+                return Task.FromResult(CodeConsumeResult.Invalid);
             }
 
-            _codes.Remove(codeHandle);
-
-            if (code.IsConsumed || code.ExpiresAt <= DateTime.UtcNow)
+            if (code.IsConsumed)
             {
-                return Task.FromResult<AuthorizationCode?>(null);
+                // Code was already consumed — replay attack detected.
+                // Keep the entry in the dict (for future replay detection within its extended TTL).
+                return Task.FromResult(CodeConsumeResult.Reused(code.SubjectId, code.ClientId));
             }
 
-            return Task.FromResult<AuthorizationCode?>(new AuthorizationCode
+            if (code.ExpiresAt <= DateTime.UtcNow)
+            {
+                _codes.Remove(codeHandle);
+                return Task.FromResult(CodeConsumeResult.Invalid);
+            }
+
+            // Mark as consumed but keep in dict so future replay attempts return Reused (not Invalid).
+            _codes[codeHandle] = new AuthorizationCode
             {
                 Code = code.Code,
                 ClientId = code.ClientId,
@@ -300,13 +310,32 @@ public sealed class InMemoryAuthorizationCodeStore : IAuthorizationCodeStore
                 CodeChallenge = code.CodeChallenge,
                 GrantedScopes = code.GrantedScopes,
                 CreatedAt = code.CreatedAt,
-                ExpiresAt = code.ExpiresAt,
+                ExpiresAt = code.ExpiresAt.AddMinutes(10), // extended TTL for replay detection
                 Nonce = code.Nonce,
                 SessionId = code.SessionId,
                 AuthTime = code.AuthTime,
                 AcrValue = code.AcrValue,
                 IsConsumed = true,
-            });
+            };
+
+            return Task.FromResult(CodeConsumeResult.Success(code));
+        }
+    }
+
+    private void PurgeExpiredConsumedCodes()
+    {
+        DateTime now = DateTime.UtcNow;
+        var toRemove = new List<string>();
+        foreach (KeyValuePair<string, AuthorizationCode> entry in _codes)
+        {
+            if (entry.Value.IsConsumed && entry.Value.ExpiresAt <= now)
+            {
+                toRemove.Add(entry.Key);
+            }
+        }
+        foreach (string key in toRemove)
+        {
+            _codes.Remove(key);
         }
     }
 
@@ -584,6 +613,7 @@ public sealed class InMemoryTokenStore : ITokenStore
                     ExpiresAt = token.ExpiresAt,
                     IsRevoked = true,
                     RefreshTokenHandle = token.RefreshTokenHandle,
+                    AuthorizationCodeHandle = token.AuthorizationCodeHandle,
                     JktThumbprint = token.JktThumbprint,
                 };
             }
@@ -645,6 +675,32 @@ public sealed class InMemoryTokenStore : ITokenStore
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc />
+    public Task RevokeByAuthCodeHandleAsync(string authorizationCodeHandle, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        lock (_gate)
+        {
+            var keysToRevoke = new List<string>();
+
+            foreach (KeyValuePair<string, IssuedToken> entry in _tokens)
+            {
+                if (string.Equals(entry.Value.AuthorizationCodeHandle, authorizationCodeHandle, StringComparison.Ordinal))
+                {
+                    keysToRevoke.Add(entry.Key);
+                }
+            }
+
+            foreach (string key in keysToRevoke)
+            {
+                RevokeKey(key);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
     private void RevokeKey(string handle)
     {
         if (_tokens.TryGetValue(handle, out IssuedToken? token))
@@ -659,6 +715,7 @@ public sealed class InMemoryTokenStore : ITokenStore
                 ExpiresAt = token.ExpiresAt,
                 IsRevoked = true,
                 RefreshTokenHandle = token.RefreshTokenHandle,
+                AuthorizationCodeHandle = token.AuthorizationCodeHandle,
                 JktThumbprint = token.JktThumbprint,
             };
         }

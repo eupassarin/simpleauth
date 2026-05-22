@@ -19,11 +19,12 @@ public sealed class EfStoreTests
             EfAuthorizationCodeStore store = new(db);
             await store.StoreAsync(BuildCode("code-001"));
 
-            AuthorizationCode? result = await store.ConsumeAsync("code-001");
+            CodeConsumeResult result = await store.ConsumeAsync("code-001");
 
-            Assert.NotNull(result);
-            Assert.Equal("code-001", result.Code);
-            Assert.Equal("client1", result.ClientId);
+            Assert.Equal(CodeConsumeStatus.Success, result.Status);
+            Assert.NotNull(result.Code);
+            Assert.Equal("code-001", result.Code.Code);
+            Assert.Equal("client1", result.Code.ClientId);
         }
         finally { await TestDb.DestroyAsync(db); }
     }
@@ -37,11 +38,11 @@ public sealed class EfStoreTests
             EfAuthorizationCodeStore store = new(db);
             await store.StoreAsync(BuildCode("code-replay"));
 
-            AuthorizationCode? first = await store.ConsumeAsync("code-replay");
-            AuthorizationCode? second = await store.ConsumeAsync("code-replay");
+            CodeConsumeResult first = await store.ConsumeAsync("code-replay");
+            CodeConsumeResult second = await store.ConsumeAsync("code-replay");
 
-            Assert.NotNull(first);
-            Assert.Null(second);
+            Assert.Equal(CodeConsumeStatus.Success, first.Status);
+            Assert.Equal(CodeConsumeStatus.Reused, second.Status);
         }
         finally { await TestDb.DestroyAsync(db); }
     }
@@ -55,7 +56,7 @@ public sealed class EfStoreTests
             EfAuthorizationCodeStore store = new(db);
             await store.StoreAsync(BuildCode("code-exp", expiresAt: DateTime.UtcNow.AddSeconds(-1)));
 
-            Assert.Null(await store.ConsumeAsync("code-exp"));
+            Assert.Equal(CodeConsumeStatus.Invalid, (await store.ConsumeAsync("code-exp")).Status);
         }
         finally { await TestDb.DestroyAsync(db); }
     }
@@ -67,7 +68,7 @@ public sealed class EfStoreTests
         try
         {
             EfAuthorizationCodeStore store = new(db);
-            Assert.Null(await store.ConsumeAsync("no-such-code"));
+            Assert.Equal(CodeConsumeStatus.Invalid, (await store.ConsumeAsync("no-such-code")).Status);
         }
         finally { await TestDb.DestroyAsync(db); }
     }
@@ -84,8 +85,8 @@ public sealed class EfStoreTests
 
             await store.RemoveAllAsync("user1", "client1");
 
-            Assert.Null(await store.ConsumeAsync("code-a"));
-            Assert.NotNull(await store.ConsumeAsync("code-b"));
+            Assert.Equal(CodeConsumeStatus.Invalid, (await store.ConsumeAsync("code-a")).Status);
+            Assert.Equal(CodeConsumeStatus.Success, (await store.ConsumeAsync("code-b")).Status);
         }
         finally { await TestDb.DestroyAsync(db); }
     }

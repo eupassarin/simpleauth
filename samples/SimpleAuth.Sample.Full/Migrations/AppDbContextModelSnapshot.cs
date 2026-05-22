@@ -253,6 +253,10 @@ namespace SimpleAuth.Sample.Full.Migrations
                     b.Property<bool>("IsRevoked")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("AuthorizationCodeHandle")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("JktThumbprint")
                         .HasMaxLength(128)
                         .HasColumnType("TEXT");
@@ -266,6 +270,8 @@ namespace SimpleAuth.Sample.Full.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Handle");
+
+                    b.HasIndex("AuthorizationCodeHandle");
 
                     b.HasIndex("ExpiresAt");
 

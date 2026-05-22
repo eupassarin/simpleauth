@@ -61,6 +61,9 @@
         <member name="P:SimpleAuth.EntityFramework.Entities.IssuedTokenEntity.GrantedScopes">
             <summary>JSON: string[]</summary>
         </member>
+        <member name="P:SimpleAuth.EntityFramework.Entities.IssuedTokenEntity.AuthorizationCodeHandle">
+            <summary>Opaque handle of the authorization code that originated this token. Used for code-reuse revocation.</summary>
+        </member>
         <member name="T:SimpleAuth.EntityFramework.Entities.ParEntryEntity">
             <summary>EF Core entity for a PAR entry (RFC 9126).</summary>
         </member>

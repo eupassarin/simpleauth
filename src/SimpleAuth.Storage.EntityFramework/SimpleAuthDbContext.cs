@@ -93,6 +93,7 @@ public class SimpleAuthDbContext : DbContext
         b.HasIndex(e => e.Handle).IsUnique();
         b.HasIndex(e => new { e.SubjectId, e.ClientId });
         b.HasIndex(e => e.RefreshTokenHandle);
+        b.HasIndex(e => e.AuthorizationCodeHandle);
         b.HasIndex(e => e.ExpiresAt);
     }
 

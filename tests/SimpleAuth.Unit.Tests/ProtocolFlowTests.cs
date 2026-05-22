@@ -119,9 +119,9 @@ public sealed class ProtocolFlowTests
         Assert.False(string.IsNullOrWhiteSpace(code));
 
         IAuthorizationCodeStore authorizationCodeStore = services.GetRequiredService<IAuthorizationCodeStore>();
-        AuthorizationCode? stored = await authorizationCodeStore.ConsumeAsync(code);
-        Assert.NotNull(stored);
-        Assert.Equal(expectedChallenge, stored!.CodeChallenge);
+        CodeConsumeResult consumeResult = await authorizationCodeStore.ConsumeAsync(code);
+        Assert.Equal(CodeConsumeStatus.Success, consumeResult.Status);
+        Assert.Equal(expectedChallenge, consumeResult.Code!.CodeChallenge);
     }
 
     private static async Task<string> IssueAuthorizationCodeAsync(IServiceProvider services)
