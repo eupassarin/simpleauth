@@ -22,19 +22,19 @@
             </div>
             <div class="sa-form-group">
                 <BbLabel>Token Endpoint — Permits per Window</BbLabel>
-                <BbNumericInput TValue="int" Value="@_tokenPermitLimit" CheckedChanged="v => _tokenPermitLimit = v" />
+                <BbNumericInput TValue="int" Value="@_tokenPermitLimit" ValueChanged="v => _tokenPermitLimit = v" />
             </div>
             <div class="sa-form-group">
                 <BbLabel>Token Endpoint — Window (seconds)</BbLabel>
-                <BbNumericInput TValue="int" Value="@_tokenWindowSeconds" CheckedChanged="v => _tokenWindowSeconds = v" />
+                <BbNumericInput TValue="int" Value="@_tokenWindowSeconds" ValueChanged="v => _tokenWindowSeconds = v" />
             </div>
             <div class="sa-form-group">
                 <BbLabel>Authorize Endpoint — Permits per Window</BbLabel>
-                <BbNumericInput TValue="int" Value="@_authorizePermitLimit" CheckedChanged="v => _authorizePermitLimit = v" />
+                <BbNumericInput TValue="int" Value="@_authorizePermitLimit" ValueChanged="v => _authorizePermitLimit = v" />
             </div>
             <div class="sa-form-group">
                 <BbLabel>Authorize Endpoint — Window (seconds)</BbLabel>
-                <BbNumericInput TValue="int" Value="@_authorizeWindowSeconds" CheckedChanged="v => _authorizeWindowSeconds = v" />
+                <BbNumericInput TValue="int" Value="@_authorizeWindowSeconds" ValueChanged="v => _authorizeWindowSeconds = v" />
             </div>
         </BbCardContent>
     </BbCard>
@@ -54,7 +54,7 @@
             </div>
             <div class="sa-form-group">
                 <BbLabel>Request Lifetime (seconds)</BbLabel>
-                <BbNumericInput TValue="int" Value="@_parLifetimeSeconds" CheckedChanged="v => _parLifetimeSeconds = v" />
+                <BbNumericInput TValue="int" Value="@_parLifetimeSeconds" ValueChanged="v => _parLifetimeSeconds = v" />
             </div>
         </BbCardContent>
     </BbCard>
