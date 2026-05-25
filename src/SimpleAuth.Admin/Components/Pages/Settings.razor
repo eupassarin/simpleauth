@@ -1,5 +1,7 @@
 @page "/admin/settings"
+@rendermode InteractiveServer
 @layout AdminLayout
+@attribute [Authorize(Policy = "SimpleAuthAdmin")]
 @inject IServerSettingsStore SettingsStore
 @inject SimpleAuthServerConfiguration ServerConfig
 

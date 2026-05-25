@@ -1,5 +1,7 @@
 @page "/admin/keys"
+@rendermode InteractiveServer
 @layout AdminLayout
+@attribute [Authorize(Policy = "SimpleAuthAdmin")]
 @inject ISigningKeyStore KeyStore
 
 <div class="sa-page-header">

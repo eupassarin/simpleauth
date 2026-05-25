@@ -1,0 +1,12 @@
+@inject SimpleAuthGuiConfiguration Config
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpCtx { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (HttpCtx != null)
+            HttpCtx.Response.Redirect($"{Config.PathPrefix}/login");
+    }
+}

@@ -1,5 +1,7 @@
 @page "/admin/tokens"
+@rendermode InteractiveServer
 @layout AdminLayout
+@attribute [Authorize(Policy = "SimpleAuthAdmin")]
 @inject IAdminTokenStore TokenStore
 
 <div class="sa-page-header">

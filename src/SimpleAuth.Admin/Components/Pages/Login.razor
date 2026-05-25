@@ -1,5 +1,9 @@
 @page "/admin/login"
 @layout LoginLayout
+@using Microsoft.AspNetCore.Authentication
+@using System.Security.Claims
+@inject SimpleAuthGuiConfiguration Config
+@inject NavigationManager Nav
 
 <div class="sa-login-container">
     <BbCard>
@@ -12,14 +16,15 @@
             {
                 <BbAlert>Invalid username or password.</BbAlert>
             }
-            <form method="post" action="admin/login">
+            <form method="post" @formname="admin-login">
+                <AntiforgeryToken />
                 <div class="sa-form-group">
                     <BbLabel>Username</BbLabel>
-                    <input type="text" name="username" class="sa-input" required autocomplete="username" />
+                    <input type="text" name="Username" class="sa-input" required autocomplete="username" />
                 </div>
                 <div class="sa-form-group">
                     <BbLabel>Password</BbLabel>
-                    <input type="password" name="password" class="sa-input" required autocomplete="current-password" />
+                    <input type="password" name="Password" class="sa-input" required autocomplete="current-password" />
                 </div>
                 <button type="submit" class="bb-button">Sign In</button>
             </form>
@@ -28,13 +33,50 @@
 </div>
 
 @code {
+    [SupplyParameterFromForm(FormName = "admin-login")]
+    private string? Username { get; set; }
+
+    [SupplyParameterFromForm(FormName = "admin-login")]
+    private string? Password { get; set; }
+
+    [CascadingParameter]
+    private HttpContext? HttpCtx { get; set; }
+
     [SupplyParameterFromQuery(Name = "error")]
     public string? ErrorParam { get; set; }
 
     private bool _error;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         _error = !string.IsNullOrEmpty(ErrorParam);
+
+        if (Username != null && HttpCtx != null)
+        {
+            if (string.Equals(Username, Config.AdminUsername, StringComparison.OrdinalIgnoreCase)
+                && Config.VerifyPassword(Password ?? string.Empty))
+            {
+                List<Claim> claims =
+                [
+                    new Claim(ClaimTypes.Name, Username),
+                    new Claim(ClaimTypes.Role, "SimpleAuthAdmin"),
+                ];
+
+                var identity = new ClaimsIdentity(claims, Config.CookieScheme);
+                var principal = new ClaimsPrincipal(identity);
+
+                await HttpCtx.SignInAsync(Config.CookieScheme, principal,
+                    new AuthenticationProperties
+                    {
+                        IsPersistent = true,
+                        ExpiresUtc = DateTimeOffset.UtcNow.Add(Config.SessionLifetime),
+                    });
+
+                HttpCtx.Response.Redirect(Config.PathPrefix);
+                return;
+            }
+
+            _error = true;
+        }
     }
 }

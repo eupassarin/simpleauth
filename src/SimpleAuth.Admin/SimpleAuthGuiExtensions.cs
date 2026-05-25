@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -53,6 +53,10 @@ public static class SimpleAuthGuiExtensions
         services.AddRazorComponents()
             .AddInteractiveServerComponents();
 
+        services.AddBlazorBlueprintComponents();
+
+        services.AddCascadingAuthenticationState();
+
         return services;
     }
 
@@ -82,47 +86,14 @@ public static class SimpleAuthGuiExtensions
         // Serve static web assets (_content/*, _framework/*)
         app.MapStaticAssets();
 
-        // Login POST endpoint
-        app.MapPost($"{prefix}/login", async context =>
-        {
-            IFormCollection form = await context.Request.ReadFormAsync();
-            string username = form["username"].ToString();
-            string password = form["password"].ToString();
-
-            if (string.Equals(username, config.AdminUsername, StringComparison.OrdinalIgnoreCase) &&
-                config.VerifyPassword(password))
-            {
-                List<Claim> claims =
-                [
-                    new Claim(ClaimTypes.Name, username),
-                    new Claim(ClaimTypes.Role, "SimpleAuthAdmin"),
-                ];
-
-                var identity = new ClaimsIdentity(claims, config.CookieScheme);
-                var principal = new ClaimsPrincipal(identity);
-
-                await context.SignInAsync(config.CookieScheme, principal,
-                    new AuthenticationProperties
-                    {
-                        IsPersistent = true,
-                        ExpiresUtc = DateTimeOffset.UtcNow.Add(config.SessionLifetime),
-                    });
-
-                context.Response.Redirect(prefix);
-                return;
-            }
-
-            context.Response.Redirect($"{prefix}/login?error=invalid");
-        });
-
-        // Logout endpoint
+        // Logout endpoint (plain HTTP GET — sign out and redirect to login)
         app.MapGet($"{prefix}/logout", async context =>
         {
             await context.SignOutAsync(config.CookieScheme);
             context.Response.Redirect($"{prefix}/login");
         });
 
-        // Map Blazor
+        // Map Blazor (also handles GET + POST /admin/login via Login.razor)
         app.MapRazorComponents<Components.App>()
             .AddInteractiveServerRenderMode();
 
