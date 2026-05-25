@@ -39,10 +39,11 @@ using (var scope = app.Services.CreateScope())
     await db.Database.EnsureCreatedAsync();
 }
 
-// Map OAuth/OIDC endpoints
-app.MapSimpleAuth();
+// Middleware (must be before endpoint mappings)
+app.UseSimpleAuthGui();
 
-// Map Admin GUI at /admin (also registers UseStaticFiles, UseAuthentication, etc.)
+// Endpoints
+app.MapSimpleAuth();
 app.MapSimpleAuthGui();
 
 app.Run();

@@ -57,18 +57,24 @@ public static class SimpleAuthGuiExtensions
     }
 
     /// <summary>
-    /// Maps the SimpleAuth admin GUI endpoints (Blazor Server + login/logout).
-    /// Registers all required middleware: static files, authentication, authorization,
-    /// and antiforgery. A single call is all that's needed.
+    /// Registers middleware required by the admin GUI: static files, authentication,
+    /// authorization, and antiforgery. Must be called <b>before</b> any endpoint mapping.
     /// </summary>
-    public static WebApplication MapSimpleAuthGui(this WebApplication app)
+    public static WebApplication UseSimpleAuthGui(this WebApplication app)
     {
-        // Required middleware — safe to call even if already registered by the host
         app.UseStaticFiles();
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseAntiforgery();
+        return app;
+    }
 
+    /// <summary>
+    /// Maps the SimpleAuth admin GUI endpoints (Blazor Server + login/logout).
+    /// Call <c>UseSimpleAuthGui()</c> first to register the required middleware.
+    /// </summary>
+    public static WebApplication MapSimpleAuthGui(this WebApplication app)
+    {
         SimpleAuthGuiConfiguration config = app.Services
             .GetRequiredService<SimpleAuthGuiConfiguration>();
 
