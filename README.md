@@ -175,6 +175,29 @@ builder.Services.AddSimpleAuthEntityFramework(options =>
     options.UseNpgsql(connectionString));  // or UseSqlite, UseSqlServer
 ```
 
+### Admin GUI (Blazor)
+
+```csharp
+builder.Services.AddSimpleAuth(server => { /* ... */ });
+builder.Services.AddSimpleAuthEntityFramework(options =>
+    options.UseNpgsql(connectionString));
+
+builder.Services.AddSimpleAuthGui(gui =>
+{
+    gui.AdminUsername = "admin";
+    gui.SetPassword("my-secure-password");
+});
+
+var app = builder.Build();
+app.MapSimpleAuth();
+app.MapSimpleAuthGui();
+app.Run();
+// Navigate to /admin to manage clients, scopes, tokens, keys, and settings.
+```
+
+> **Requires EF Core** — the admin GUI persists all changes to the database.
+> In-memory stores do not support the admin panel.
+
 ### Claims Enrichment
 
 ```csharp
@@ -207,6 +230,7 @@ public class MyClaimsEnricher : IClaimsEnricher
 | User consent | `IConsentStore` |
 | DPoP replay detection | `IJtiStore` |
 | PAR storage | `IParStore` |
+| Admin GUI | `AddSimpleAuthGui()` + `MapSimpleAuthGui()` |
 | Login/consent UI | `InteractionConfiguration` (custom paths) |
 
 All interfaces are in `SimpleAuth.Storage.Abstractions` — implement your own for any backend.
