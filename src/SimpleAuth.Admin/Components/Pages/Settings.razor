@@ -17,24 +17,24 @@
         </BbCardHeader>
         <BbCardContent>
             <div class="sa-form-group sa-form-switch">
-                <BbSwitch Value="@_rateLimitEnabled" ValueChanged="v => _rateLimitEnabled = v" />
+                <BbSwitch Checked="@_rateLimitEnabled" CheckedChanged="v => _rateLimitEnabled = v" />
                 <BbLabel>Enabled</BbLabel>
             </div>
             <div class="sa-form-group">
                 <BbLabel>Token Endpoint — Permits per Window</BbLabel>
-                <BbNumericInput TValue="int" Value="@_tokenPermitLimit" ValueChanged="v => _tokenPermitLimit = v" />
+                <BbNumericInput TValue="int" Value="@_tokenPermitLimit" CheckedChanged="v => _tokenPermitLimit = v" />
             </div>
             <div class="sa-form-group">
                 <BbLabel>Token Endpoint — Window (seconds)</BbLabel>
-                <BbNumericInput TValue="int" Value="@_tokenWindowSeconds" ValueChanged="v => _tokenWindowSeconds = v" />
+                <BbNumericInput TValue="int" Value="@_tokenWindowSeconds" CheckedChanged="v => _tokenWindowSeconds = v" />
             </div>
             <div class="sa-form-group">
                 <BbLabel>Authorize Endpoint — Permits per Window</BbLabel>
-                <BbNumericInput TValue="int" Value="@_authorizePermitLimit" ValueChanged="v => _authorizePermitLimit = v" />
+                <BbNumericInput TValue="int" Value="@_authorizePermitLimit" CheckedChanged="v => _authorizePermitLimit = v" />
             </div>
             <div class="sa-form-group">
                 <BbLabel>Authorize Endpoint — Window (seconds)</BbLabel>
-                <BbNumericInput TValue="int" Value="@_authorizeWindowSeconds" ValueChanged="v => _authorizeWindowSeconds = v" />
+                <BbNumericInput TValue="int" Value="@_authorizeWindowSeconds" CheckedChanged="v => _authorizeWindowSeconds = v" />
             </div>
         </BbCardContent>
     </BbCard>
@@ -45,16 +45,16 @@
         </BbCardHeader>
         <BbCardContent>
             <div class="sa-form-group sa-form-switch">
-                <BbSwitch Value="@_parEnabled" ValueChanged="v => _parEnabled = v" />
+                <BbSwitch Checked="@_parEnabled" CheckedChanged="v => _parEnabled = v" />
                 <BbLabel>Enabled</BbLabel>
             </div>
             <div class="sa-form-group sa-form-switch">
-                <BbSwitch Value="@_parRequired" ValueChanged="v => _parRequired = v" />
+                <BbSwitch Checked="@_parRequired" CheckedChanged="v => _parRequired = v" />
                 <BbLabel>Required</BbLabel>
             </div>
             <div class="sa-form-group">
                 <BbLabel>Request Lifetime (seconds)</BbLabel>
-                <BbNumericInput TValue="int" Value="@_parLifetimeSeconds" ValueChanged="v => _parLifetimeSeconds = v" />
+                <BbNumericInput TValue="int" Value="@_parLifetimeSeconds" CheckedChanged="v => _parLifetimeSeconds = v" />
             </div>
         </BbCardContent>
     </BbCard>
@@ -65,19 +65,19 @@
         </BbCardHeader>
         <BbCardContent>
             <div class="sa-form-group sa-form-switch">
-                <BbSwitch Value="@_discoveryAuthEndpoint" ValueChanged="v => _discoveryAuthEndpoint = v" />
+                <BbSwitch Checked="@_discoveryAuthEndpoint" CheckedChanged="v => _discoveryAuthEndpoint = v" />
                 <BbLabel>Include Authorization Endpoint</BbLabel>
             </div>
             <div class="sa-form-group sa-form-switch">
-                <BbSwitch Value="@_discoveryUserInfo" ValueChanged="v => _discoveryUserInfo = v" />
+                <BbSwitch Checked="@_discoveryUserInfo" CheckedChanged="v => _discoveryUserInfo = v" />
                 <BbLabel>Include UserInfo Endpoint</BbLabel>
             </div>
             <div class="sa-form-group sa-form-switch">
-                <BbSwitch Value="@_discoveryIntrospection" ValueChanged="v => _discoveryIntrospection = v" />
+                <BbSwitch Checked="@_discoveryIntrospection" CheckedChanged="v => _discoveryIntrospection = v" />
                 <BbLabel>Include Introspection Endpoint</BbLabel>
             </div>
             <div class="sa-form-group sa-form-switch">
-                <BbSwitch Value="@_discoveryRevocation" ValueChanged="v => _discoveryRevocation = v" />
+                <BbSwitch Checked="@_discoveryRevocation" CheckedChanged="v => _discoveryRevocation = v" />
                 <BbLabel>Include Revocation Endpoint</BbLabel>
             </div>
         </BbCardContent>

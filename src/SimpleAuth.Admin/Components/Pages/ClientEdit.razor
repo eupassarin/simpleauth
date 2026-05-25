@@ -19,18 +19,18 @@
         <BbCardContent>
             <div class="sa-form-group">
                 <BbLabel>Client ID</BbLabel>
-                <BbInput Value="@_clientId" ValueChanged="v => _clientId = v"
+                <BbInput Value="@_clientId" CheckedChanged="v => _clientId = v"
                          Disabled="@(!_isNew)" Placeholder="my-app" />
             </div>
             <div class="sa-form-group">
                 <BbLabel>Client Name</BbLabel>
-                <BbInput Value="@_clientName" ValueChanged="v => _clientName = v"
+                <BbInput Value="@_clientName" CheckedChanged="v => _clientName = v"
                          Placeholder="My Application" />
             </div>
             <div class="sa-form-group">
                 <BbLabel>Token Endpoint Auth Method</BbLabel>
                 <BbNativeSelect TValue="string" Value="@_authMethod"
-                                ValueChanged="v => _authMethod = v">
+                                CheckedChanged="v => _authMethod = v">
                     <option value="client_secret_basic">client_secret_basic</option>
                     <option value="client_secret_post">client_secret_post</option>
                     <option value="none">none (public)</option>
@@ -46,12 +46,12 @@
         <BbCardContent>
             <div class="sa-form-group">
                 <BbLabel>Redirect URIs (one per line)</BbLabel>
-                <BbTextarea Value="@_redirectUrisText" ValueChanged="v => _redirectUrisText = v"
+                <BbTextarea Value="@_redirectUrisText" CheckedChanged="v => _redirectUrisText = v"
                             Placeholder="https://app.example.com/callback" />
             </div>
             <div class="sa-form-group">
                 <BbLabel>Post-Logout Redirect URIs (one per line)</BbLabel>
-                <BbTextarea Value="@_postLogoutUrisText" ValueChanged="v => _postLogoutUrisText = v"
+                <BbTextarea Value="@_postLogoutUrisText" CheckedChanged="v => _postLogoutUrisText = v"
                             Placeholder="https://app.example.com/signed-out" />
             </div>
         </BbCardContent>
@@ -64,7 +64,7 @@
         <BbCardContent>
             <div class="sa-form-group">
                 <BbLabel>Allowed Scopes (space-separated)</BbLabel>
-                <BbInput Value="@_scopesText" ValueChanged="v => _scopesText = v"
+                <BbInput Value="@_scopesText" CheckedChanged="v => _scopesText = v"
                          Placeholder="openid profile email" />
             </div>
         </BbCardContent>
@@ -78,22 +78,22 @@
             <div class="sa-form-group">
                 <BbLabel>Access Token Lifetime (seconds)</BbLabel>
                 <BbNumericInput TValue="int" Value="@_accessTokenLifetime"
-                                ValueChanged="v => _accessTokenLifetime = v" />
+                                CheckedChanged="v => _accessTokenLifetime = v" />
             </div>
             <div class="sa-form-group">
                 <BbLabel>Refresh Token Lifetime (seconds)</BbLabel>
                 <BbNumericInput TValue="int" Value="@_refreshTokenLifetime"
-                                ValueChanged="v => _refreshTokenLifetime = v" />
+                                CheckedChanged="v => _refreshTokenLifetime = v" />
             </div>
             <div class="sa-form-group">
                 <BbLabel>ID Token Lifetime (seconds)</BbLabel>
                 <BbNumericInput TValue="int" Value="@_idTokenLifetime"
-                                ValueChanged="v => _idTokenLifetime = v" />
+                                CheckedChanged="v => _idTokenLifetime = v" />
             </div>
             <div class="sa-form-group">
                 <BbLabel>Authorization Code Lifetime (seconds)</BbLabel>
                 <BbNumericInput TValue="int" Value="@_authCodeLifetime"
-                                ValueChanged="v => _authCodeLifetime = v" />
+                                CheckedChanged="v => _authCodeLifetime = v" />
             </div>
         </BbCardContent>
     </BbCard>
@@ -104,11 +104,11 @@
         </BbCardHeader>
         <BbCardContent>
             <div class="sa-form-group sa-form-switch">
-                <BbSwitch Value="@_requirePkce" ValueChanged="v => _requirePkce = v" />
+                <BbSwitch Checked="@_requirePkce" CheckedChanged="v => _requirePkce = v" />
                 <BbLabel>Require PKCE</BbLabel>
             </div>
             <div class="sa-form-group sa-form-switch">
-                <BbSwitch Value="@_allowOfflineAccess" ValueChanged="v => _allowOfflineAccess = v" />
+                <BbSwitch Checked="@_allowOfflineAccess" CheckedChanged="v => _allowOfflineAccess = v" />
                 <BbLabel>Allow Offline Access (Refresh Tokens)</BbLabel>
             </div>
         </BbCardContent>
