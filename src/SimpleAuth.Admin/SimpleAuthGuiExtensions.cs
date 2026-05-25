@@ -2,7 +2,6 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace SimpleAuth.Admin;
@@ -59,16 +58,21 @@ public static class SimpleAuthGuiExtensions
 
     /// <summary>
     /// Maps the SimpleAuth admin GUI endpoints (Blazor Server + login/logout).
+    /// Also registers the antiforgery middleware required by Blazor.
+    /// Call this after <c>UseAuthentication</c> and <c>UseAuthorization</c>.
     /// </summary>
-    public static IEndpointRouteBuilder MapSimpleAuthGui(this IEndpointRouteBuilder endpoints)
+    public static WebApplication MapSimpleAuthGui(this WebApplication app)
     {
-        SimpleAuthGuiConfiguration config = endpoints.ServiceProvider
+        // Blazor interactive server components require antiforgery middleware
+        app.UseAntiforgery();
+
+        SimpleAuthGuiConfiguration config = app.Services
             .GetRequiredService<SimpleAuthGuiConfiguration>();
 
         string prefix = config.PathPrefix.TrimEnd('/');
 
         // Login POST endpoint
-        endpoints.MapPost($"{prefix}/login", async context =>
+        app.MapPost($"{prefix}/login", async context =>
         {
             IFormCollection form = await context.Request.ReadFormAsync();
             string username = form["username"].ToString();
@@ -101,16 +105,16 @@ public static class SimpleAuthGuiExtensions
         });
 
         // Logout endpoint
-        endpoints.MapGet($"{prefix}/logout", async context =>
+        app.MapGet($"{prefix}/logout", async context =>
         {
             await context.SignOutAsync(config.CookieScheme);
             context.Response.Redirect($"{prefix}/login");
         });
 
         // Map Blazor
-        endpoints.MapRazorComponents<Components.App>()
+        app.MapRazorComponents<Components.App>()
             .AddInteractiveServerRenderMode();
 
-        return endpoints;
+        return app;
     }
 }
