@@ -1,11 +1,13 @@
 <Solution>
   <Folder Name="/samples/">
+    <Project Path="samples/SimpleAuth.Sample.Admin/SimpleAuth.Sample.Admin.csproj" />
     <Project Path="samples/SimpleAuth.Sample.Conformance/SimpleAuth.Sample.Conformance.csproj" />
     <Project Path="samples/SimpleAuth.Sample.Full/SimpleAuth.Sample.Full.csproj" />
     <Project Path="samples/SimpleAuth.Sample.Interactive/SimpleAuth.Sample.Interactive.csproj" />
     <Project Path="samples/SimpleAuth.Sample.Minimal/SimpleAuth.Sample.Minimal.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/SimpleAuth.Admin/SimpleAuth.Admin.csproj" />
     <Project Path="src/SimpleAuth.Core/SimpleAuth.Core.csproj" />
     <Project Path="src/SimpleAuth.Storage.Abstractions/SimpleAuth.Storage.Abstractions.csproj" />
     <Project Path="src/SimpleAuth.Storage.EntityFramework/SimpleAuth.Storage.EntityFramework.csproj" />
