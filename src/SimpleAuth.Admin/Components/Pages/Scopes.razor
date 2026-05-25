@@ -1,0 +1,98 @@
+@page "/admin/scopes"
+@layout AdminLayout
+@inject IAdminResourceStore ResourceStore
+
+<div class="sa-page-header">
+    <h1>Scopes</h1>
+</div>
+
+<BbCard>
+    <BbCardHeader>
+        <BbCardTitle>API Scopes</BbCardTitle>
+        <BbCardDescription>Scopes that protect API resources</BbCardDescription>
+    </BbCardHeader>
+    <BbCardContent>
+        @if (_scopes is null)
+        {
+            <p>Loading...</p>
+        }
+        else if (_scopes.Count == 0)
+        {
+            <p>No API scopes configured.</p>
+        }
+        else
+        {
+            <table class="sa-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Display Name</th>
+                        <th>Required</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var scope in _scopes)
+                    {
+                        <tr>
+                            <td><code>@scope.Name</code></td>
+                            <td>@(scope.DisplayName ?? "—")</td>
+                            <td>@(scope.Required ? "Yes" : "No")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </BbCardContent>
+</BbCard>
+
+<BbSeparator />
+
+<BbCard>
+    <BbCardHeader>
+        <BbCardTitle>Identity Scopes</BbCardTitle>
+        <BbCardDescription>Scopes that provide user identity claims</BbCardDescription>
+    </BbCardHeader>
+    <BbCardContent>
+        @if (_identityScopes is null)
+        {
+            <p>Loading...</p>
+        }
+        else if (_identityScopes.Count == 0)
+        {
+            <p>No identity scopes configured.</p>
+        }
+        else
+        {
+            <table class="sa-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Display Name</th>
+                        <th>Claim Types</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var scope in _identityScopes)
+                    {
+                        <tr>
+                            <td><code>@scope.Name</code></td>
+                            <td>@(scope.DisplayName ?? "—")</td>
+                            <td>@scope.ClaimTypes.Count</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </BbCardContent>
+</BbCard>
+
+@code {
+    private IReadOnlyList<Scope>? _scopes;
+    private IReadOnlyList<IdentityScope>? _identityScopes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _scopes = await ResourceStore.GetAllScopesAsync();
+        _identityScopes = await ResourceStore.GetAllIdentityScopesAsync();
+    }
+}

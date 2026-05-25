@@ -1,0 +1,212 @@
+@page "/admin/clients/new"
+@page "/admin/clients/{ClientId}"
+@layout AdminLayout
+@inject IAdminClientStore ClientStore
+@inject NavigationManager Nav
+
+<div class="sa-page-header">
+    <h1>@(_isNew ? "New Client" : $"Edit: {ClientId}")</h1>
+    <BbButton Variant="ButtonVariant.Outline" OnClick="GoBack">Back</BbButton>
+</div>
+
+<div class="sa-form-sections">
+    <BbCard>
+        <BbCardHeader>
+            <BbCardTitle>General</BbCardTitle>
+        </BbCardHeader>
+        <BbCardContent>
+            <div class="sa-form-group">
+                <BbLabel>Client ID</BbLabel>
+                <BbInput Value="@_clientId" ValueChanged="v => _clientId = v"
+                         Disabled="@(!_isNew)" Placeholder="my-app" />
+            </div>
+            <div class="sa-form-group">
+                <BbLabel>Client Name</BbLabel>
+                <BbInput Value="@_clientName" ValueChanged="v => _clientName = v"
+                         Placeholder="My Application" />
+            </div>
+            <div class="sa-form-group">
+                <BbLabel>Token Endpoint Auth Method</BbLabel>
+                <BbNativeSelect TValue="string" Value="@_authMethod"
+                                ValueChanged="v => _authMethod = v">
+                    <option value="client_secret_basic">client_secret_basic</option>
+                    <option value="client_secret_post">client_secret_post</option>
+                    <option value="none">none (public)</option>
+                </BbNativeSelect>
+            </div>
+        </BbCardContent>
+    </BbCard>
+
+    <BbCard>
+        <BbCardHeader>
+            <BbCardTitle>Redirect URIs</BbCardTitle>
+        </BbCardHeader>
+        <BbCardContent>
+            <div class="sa-form-group">
+                <BbLabel>Redirect URIs (one per line)</BbLabel>
+                <BbTextarea Value="@_redirectUrisText" ValueChanged="v => _redirectUrisText = v"
+                            Placeholder="https://app.example.com/callback" />
+            </div>
+            <div class="sa-form-group">
+                <BbLabel>Post-Logout Redirect URIs (one per line)</BbLabel>
+                <BbTextarea Value="@_postLogoutUrisText" ValueChanged="v => _postLogoutUrisText = v"
+                            Placeholder="https://app.example.com/signed-out" />
+            </div>
+        </BbCardContent>
+    </BbCard>
+
+    <BbCard>
+        <BbCardHeader>
+            <BbCardTitle>Scopes</BbCardTitle>
+        </BbCardHeader>
+        <BbCardContent>
+            <div class="sa-form-group">
+                <BbLabel>Allowed Scopes (space-separated)</BbLabel>
+                <BbInput Value="@_scopesText" ValueChanged="v => _scopesText = v"
+                         Placeholder="openid profile email" />
+            </div>
+        </BbCardContent>
+    </BbCard>
+
+    <BbCard>
+        <BbCardHeader>
+            <BbCardTitle>Token Lifetimes</BbCardTitle>
+        </BbCardHeader>
+        <BbCardContent>
+            <div class="sa-form-group">
+                <BbLabel>Access Token Lifetime (seconds)</BbLabel>
+                <BbNumericInput TValue="int" Value="@_accessTokenLifetime"
+                                ValueChanged="v => _accessTokenLifetime = v" />
+            </div>
+            <div class="sa-form-group">
+                <BbLabel>Refresh Token Lifetime (seconds)</BbLabel>
+                <BbNumericInput TValue="int" Value="@_refreshTokenLifetime"
+                                ValueChanged="v => _refreshTokenLifetime = v" />
+            </div>
+            <div class="sa-form-group">
+                <BbLabel>ID Token Lifetime (seconds)</BbLabel>
+                <BbNumericInput TValue="int" Value="@_idTokenLifetime"
+                                ValueChanged="v => _idTokenLifetime = v" />
+            </div>
+            <div class="sa-form-group">
+                <BbLabel>Authorization Code Lifetime (seconds)</BbLabel>
+                <BbNumericInput TValue="int" Value="@_authCodeLifetime"
+                                ValueChanged="v => _authCodeLifetime = v" />
+            </div>
+        </BbCardContent>
+    </BbCard>
+
+    <BbCard>
+        <BbCardHeader>
+            <BbCardTitle>Options</BbCardTitle>
+        </BbCardHeader>
+        <BbCardContent>
+            <div class="sa-form-group sa-form-switch">
+                <BbSwitch Value="@_requirePkce" ValueChanged="v => _requirePkce = v" />
+                <BbLabel>Require PKCE</BbLabel>
+            </div>
+            <div class="sa-form-group sa-form-switch">
+                <BbSwitch Value="@_allowOfflineAccess" ValueChanged="v => _allowOfflineAccess = v" />
+                <BbLabel>Allow Offline Access (Refresh Tokens)</BbLabel>
+            </div>
+        </BbCardContent>
+    </BbCard>
+
+    <div class="sa-form-actions">
+        <BbButton OnClick="SaveAsync">
+            @(_isNew ? "Create Client" : "Save Changes")
+        </BbButton>
+        <BbButton Variant="ButtonVariant.Outline" OnClick="GoBack">Cancel</BbButton>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? ClientId { get; set; }
+
+    private bool _isNew;
+    private string _clientId = "";
+    private string _clientName = "";
+    private string _authMethod = AuthMethod.ClientSecretBasic;
+    private string _redirectUrisText = "";
+    private string _postLogoutUrisText = "";
+    private string _scopesText = "";
+    private int _accessTokenLifetime = 3600;
+    private int _refreshTokenLifetime = 2592000;
+    private int _idTokenLifetime = 300;
+    private int _authCodeLifetime = 300;
+    private bool _requirePkce = true;
+    private bool _allowOfflineAccess;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(ClientId) || ClientId == "new")
+        {
+            _isNew = true;
+            return;
+        }
+
+        _isNew = false;
+        var client = await ClientStore.FindByIdAsync(ClientId);
+        if (client is null)
+        {
+            Nav.NavigateTo("admin/clients");
+            return;
+        }
+
+        _clientId = client.ClientId;
+        _clientName = client.ClientName;
+        _authMethod = client.TokenEndpointAuthMethod;
+        _redirectUrisText = string.Join("\n", client.RedirectUris);
+        _postLogoutUrisText = string.Join("\n", client.PostLogoutRedirectUris);
+        _scopesText = string.Join(" ", client.AllowedScopes);
+        _accessTokenLifetime = (int)client.AccessTokenLifetime.TotalSeconds;
+        _refreshTokenLifetime = (int)client.RefreshTokenLifetime.TotalSeconds;
+        _idTokenLifetime = (int)client.IdentityTokenLifetime.TotalSeconds;
+        _authCodeLifetime = (int)client.AuthorizationCodeLifetime.TotalSeconds;
+        _requirePkce = client.RequirePkce;
+        _allowOfflineAccess = client.AllowOfflineAccess;
+    }
+
+    private async Task SaveAsync()
+    {
+        var client = new Client
+        {
+            ClientId = _clientId,
+            ClientName = _clientName,
+            TokenEndpointAuthMethod = _authMethod,
+            RequireClientSecret = _authMethod != AuthMethod.None,
+            RedirectUris = ParseLines(_redirectUrisText),
+            PostLogoutRedirectUris = ParseLines(_postLogoutUrisText),
+            AllowedScopes = _scopesText.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList(),
+            AllowedGrantTypes = [GrantType.AuthorizationCode, GrantType.RefreshToken],
+            AccessTokenLifetime = TimeSpan.FromSeconds(_accessTokenLifetime),
+            RefreshTokenLifetime = TimeSpan.FromSeconds(_refreshTokenLifetime),
+            IdentityTokenLifetime = TimeSpan.FromSeconds(_idTokenLifetime),
+            AuthorizationCodeLifetime = TimeSpan.FromSeconds(_authCodeLifetime),
+            RequirePkce = _requirePkce,
+            AllowOfflineAccess = _allowOfflineAccess,
+        };
+
+        if (_isNew)
+        {
+            await ClientStore.AddAsync(client);
+        }
+        else
+        {
+            await ClientStore.UpdateAsync(client);
+        }
+
+        Nav.NavigateTo("admin/clients");
+    }
+
+    private void GoBack()
+    {
+        Nav.NavigateTo("admin/clients");
+    }
+
+    private static List<string> ParseLines(string text) =>
+        text.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => s.Trim())
+            .Where(s => s.Length > 0)
+            .ToList();
+}

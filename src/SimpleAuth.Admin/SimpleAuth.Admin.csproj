@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>SimpleAuth.Admin</RootNamespace>
+    <AssemblyName>SimpleAuth.Admin</AssemblyName>
+    <PackageId>SimpleAuth.Admin</PackageId>
+    <Description>Blazor Server admin GUI for SimpleAuth — manage clients, scopes, tokens, keys, and server settings.</Description>
+    <IsAotCompatible>false</IsAotCompatible>
+    <EnableTrimAnalyzer>false</EnableTrimAnalyzer>
+    <EnableSingleFileAnalyzer>false</EnableSingleFileAnalyzer>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BlazorBlueprint.Components" Version="3.10.2" />
+    <PackageReference Include="BlazorBlueprint.Icons.Lucide" Version="2.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SimpleAuth.Core\SimpleAuth.Core.csproj" />
+    <ProjectReference Include="..\SimpleAuth.Storage.EntityFramework\SimpleAuth.Storage.EntityFramework.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,51 @@
+@page "/admin/resources"
+@layout AdminLayout
+@inject IAdminResourceStore ResourceStore
+
+<div class="sa-page-header">
+    <h1>Protected Resources</h1>
+</div>
+
+<BbCard>
+    <BbCardContent>
+        @if (_resources is null)
+        {
+            <p>Loading...</p>
+        }
+        else if (_resources.Count == 0)
+        {
+            <p>No protected resources configured.</p>
+        }
+        else
+        {
+            <table class="sa-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Display Name</th>
+                        <th>Scopes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var resource in _resources)
+                    {
+                        <tr>
+                            <td><code>@resource.Name</code></td>
+                            <td>@resource.DisplayName</td>
+                            <td>@resource.Scopes.Count</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </BbCardContent>
+</BbCard>
+
+@code {
+    private IReadOnlyList<ProtectedResource>? _resources;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _resources = await ResourceStore.GetAllResourcesAsync();
+    }
+}

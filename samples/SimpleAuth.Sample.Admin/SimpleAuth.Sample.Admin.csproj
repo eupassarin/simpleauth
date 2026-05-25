@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>SimpleAuth.Sample.Admin</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SimpleAuth.Core\SimpleAuth.Core.csproj" />
+    <ProjectReference Include="..\..\src\SimpleAuth.Storage.EntityFramework\SimpleAuth.Storage.EntityFramework.csproj" />
+    <ProjectReference Include="..\..\src\SimpleAuth.Admin\SimpleAuth.Admin.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,156 @@
+@page "/admin/settings"
+@layout AdminLayout
+@inject IServerSettingsStore SettingsStore
+@inject SimpleAuthServerConfiguration ServerConfig
+
+<div class="sa-page-header">
+    <h1>Server Settings</h1>
+</div>
+
+<div class="sa-form-sections">
+    <BbCard>
+        <BbCardHeader>
+            <BbCardTitle>Rate Limiting</BbCardTitle>
+            <BbCardDescription>Control request throttling</BbCardDescription>
+        </BbCardHeader>
+        <BbCardContent>
+            <div class="sa-form-group sa-form-switch">
+                <BbSwitch Value="@_rateLimitEnabled" ValueChanged="v => _rateLimitEnabled = v" />
+                <BbLabel>Enabled</BbLabel>
+            </div>
+            <div class="sa-form-group">
+                <BbLabel>Token Endpoint — Permits per Window</BbLabel>
+                <BbNumericInput TValue="int" Value="@_tokenPermitLimit" ValueChanged="v => _tokenPermitLimit = v" />
+            </div>
+            <div class="sa-form-group">
+                <BbLabel>Token Endpoint — Window (seconds)</BbLabel>
+                <BbNumericInput TValue="int" Value="@_tokenWindowSeconds" ValueChanged="v => _tokenWindowSeconds = v" />
+            </div>
+            <div class="sa-form-group">
+                <BbLabel>Authorize Endpoint — Permits per Window</BbLabel>
+                <BbNumericInput TValue="int" Value="@_authorizePermitLimit" ValueChanged="v => _authorizePermitLimit = v" />
+            </div>
+            <div class="sa-form-group">
+                <BbLabel>Authorize Endpoint — Window (seconds)</BbLabel>
+                <BbNumericInput TValue="int" Value="@_authorizeWindowSeconds" ValueChanged="v => _authorizeWindowSeconds = v" />
+            </div>
+        </BbCardContent>
+    </BbCard>
+
+    <BbCard>
+        <BbCardHeader>
+            <BbCardTitle>Pushed Authorization Requests (PAR)</BbCardTitle>
+        </BbCardHeader>
+        <BbCardContent>
+            <div class="sa-form-group sa-form-switch">
+                <BbSwitch Value="@_parEnabled" ValueChanged="v => _parEnabled = v" />
+                <BbLabel>Enabled</BbLabel>
+            </div>
+            <div class="sa-form-group sa-form-switch">
+                <BbSwitch Value="@_parRequired" ValueChanged="v => _parRequired = v" />
+                <BbLabel>Required</BbLabel>
+            </div>
+            <div class="sa-form-group">
+                <BbLabel>Request Lifetime (seconds)</BbLabel>
+                <BbNumericInput TValue="int" Value="@_parLifetimeSeconds" ValueChanged="v => _parLifetimeSeconds = v" />
+            </div>
+        </BbCardContent>
+    </BbCard>
+
+    <BbCard>
+        <BbCardHeader>
+            <BbCardTitle>Discovery Document</BbCardTitle>
+        </BbCardHeader>
+        <BbCardContent>
+            <div class="sa-form-group sa-form-switch">
+                <BbSwitch Value="@_discoveryAuthEndpoint" ValueChanged="v => _discoveryAuthEndpoint = v" />
+                <BbLabel>Include Authorization Endpoint</BbLabel>
+            </div>
+            <div class="sa-form-group sa-form-switch">
+                <BbSwitch Value="@_discoveryUserInfo" ValueChanged="v => _discoveryUserInfo = v" />
+                <BbLabel>Include UserInfo Endpoint</BbLabel>
+            </div>
+            <div class="sa-form-group sa-form-switch">
+                <BbSwitch Value="@_discoveryIntrospection" ValueChanged="v => _discoveryIntrospection = v" />
+                <BbLabel>Include Introspection Endpoint</BbLabel>
+            </div>
+            <div class="sa-form-group sa-form-switch">
+                <BbSwitch Value="@_discoveryRevocation" ValueChanged="v => _discoveryRevocation = v" />
+                <BbLabel>Include Revocation Endpoint</BbLabel>
+            </div>
+        </BbCardContent>
+    </BbCard>
+
+    <div class="sa-form-actions">
+        <BbButton OnClick="SaveAsync">Save Settings</BbButton>
+    </div>
+
+    @if (_saved)
+    {
+        <BbAlert>Settings saved and applied immediately — no restart required.</BbAlert>
+    }
+</div>
+
+@code {
+    private bool _rateLimitEnabled = true;
+    private int _tokenPermitLimit = 20;
+    private int _tokenWindowSeconds = 60;
+    private int _authorizePermitLimit = 30;
+    private int _authorizeWindowSeconds = 60;
+    private bool _parEnabled = true;
+    private bool _parRequired;
+    private int _parLifetimeSeconds = 90;
+    private bool _discoveryAuthEndpoint = true;
+    private bool _discoveryUserInfo = true;
+    private bool _discoveryIntrospection;
+    private bool _discoveryRevocation;
+    private bool _saved;
+
+    protected override Task OnInitializedAsync()
+    {
+        _rateLimitEnabled = ServerConfig.RateLimit.Enabled;
+        _tokenPermitLimit = ServerConfig.RateLimit.TokenPermitLimit;
+        _tokenWindowSeconds = (int)ServerConfig.RateLimit.TokenWindow.TotalSeconds;
+        _authorizePermitLimit = ServerConfig.RateLimit.AuthorizePermitLimit;
+        _authorizeWindowSeconds = (int)ServerConfig.RateLimit.AuthorizeWindow.TotalSeconds;
+        _parEnabled = ServerConfig.Par.Enabled;
+        _parRequired = ServerConfig.Par.Required;
+        _parLifetimeSeconds = (int)ServerConfig.Par.RequestLifetime.TotalSeconds;
+        _discoveryAuthEndpoint = ServerConfig.Discovery.IncludeAuthorizationEndpoint;
+        _discoveryUserInfo = ServerConfig.Discovery.IncludeUserInfoEndpoint;
+        _discoveryIntrospection = ServerConfig.Discovery.IncludeIntrospectionEndpoint;
+        _discoveryRevocation = ServerConfig.Discovery.IncludeRevocationEndpoint;
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveAsync()
+    {
+        await SettingsStore.SetAsync("RateLimit.Enabled", _rateLimitEnabled.ToString());
+        await SettingsStore.SetAsync("RateLimit.TokenPermitLimit", _tokenPermitLimit.ToString());
+        await SettingsStore.SetAsync("RateLimit.TokenWindowSeconds", _tokenWindowSeconds.ToString());
+        await SettingsStore.SetAsync("RateLimit.AuthorizePermitLimit", _authorizePermitLimit.ToString());
+        await SettingsStore.SetAsync("RateLimit.AuthorizeWindowSeconds", _authorizeWindowSeconds.ToString());
+        await SettingsStore.SetAsync("Par.Enabled", _parEnabled.ToString());
+        await SettingsStore.SetAsync("Par.Required", _parRequired.ToString());
+        await SettingsStore.SetAsync("Par.RequestLifetimeSeconds", _parLifetimeSeconds.ToString());
+        await SettingsStore.SetAsync("Discovery.IncludeAuthorizationEndpoint", _discoveryAuthEndpoint.ToString());
+        await SettingsStore.SetAsync("Discovery.IncludeUserInfoEndpoint", _discoveryUserInfo.ToString());
+        await SettingsStore.SetAsync("Discovery.IncludeIntrospectionEndpoint", _discoveryIntrospection.ToString());
+        await SettingsStore.SetAsync("Discovery.IncludeRevocationEndpoint", _discoveryRevocation.ToString());
+
+        ServerConfig.RateLimit.Enabled = _rateLimitEnabled;
+        ServerConfig.RateLimit.TokenPermitLimit = _tokenPermitLimit;
+        ServerConfig.RateLimit.TokenWindow = TimeSpan.FromSeconds(_tokenWindowSeconds);
+        ServerConfig.RateLimit.AuthorizePermitLimit = _authorizePermitLimit;
+        ServerConfig.RateLimit.AuthorizeWindow = TimeSpan.FromSeconds(_authorizeWindowSeconds);
+        ServerConfig.Par.Enabled = _parEnabled;
+        ServerConfig.Par.Required = _parRequired;
+        ServerConfig.Par.RequestLifetime = TimeSpan.FromSeconds(_parLifetimeSeconds);
+        ServerConfig.Discovery.IncludeAuthorizationEndpoint = _discoveryAuthEndpoint;
+        ServerConfig.Discovery.IncludeUserInfoEndpoint = _discoveryUserInfo;
+        ServerConfig.Discovery.IncludeIntrospectionEndpoint = _discoveryIntrospection;
+        ServerConfig.Discovery.IncludeRevocationEndpoint = _discoveryRevocation;
+
+        _saved = true;
+    }
+}

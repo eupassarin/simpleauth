@@ -1,0 +1,65 @@
+@inherits LayoutComponentBase
+
+<div class="sa-admin-container">
+    <nav class="sa-admin-sidebar">
+        <div class="sa-admin-logo">
+            <h2>SimpleAuth</h2>
+            <BbBadge>Admin</BbBadge>
+        </div>
+        <BbSeparator />
+        <ul class="sa-admin-nav">
+            <li>
+                <NavLink href="admin" Match="NavLinkMatch.All">
+                    <LucideIcon Name="layout-dashboard" Size="18" />
+                    <span>Dashboard</span>
+                </NavLink>
+            </li>
+            <li>
+                <NavLink href="admin/clients">
+                    <LucideIcon Name="app-window" Size="18" />
+                    <span>Clients</span>
+                </NavLink>
+            </li>
+            <li>
+                <NavLink href="admin/scopes">
+                    <LucideIcon Name="shield-check" Size="18" />
+                    <span>Scopes</span>
+                </NavLink>
+            </li>
+            <li>
+                <NavLink href="admin/resources">
+                    <LucideIcon Name="database" Size="18" />
+                    <span>Resources</span>
+                </NavLink>
+            </li>
+            <li>
+                <NavLink href="admin/tokens">
+                    <LucideIcon Name="key-round" Size="18" />
+                    <span>Tokens</span>
+                </NavLink>
+            </li>
+            <li>
+                <NavLink href="admin/keys">
+                    <LucideIcon Name="lock" Size="18" />
+                    <span>Keys</span>
+                </NavLink>
+            </li>
+            <li>
+                <NavLink href="admin/settings">
+                    <LucideIcon Name="settings" Size="18" />
+                    <span>Settings</span>
+                </NavLink>
+            </li>
+        </ul>
+        <div class="sa-admin-sidebar-footer">
+            <BbSeparator />
+            <a href="admin/logout" class="sa-admin-logout">
+                <LucideIcon Name="log-out" Size="18" />
+                <span>Logout</span>
+            </a>
+        </div>
+    </nav>
+    <main class="sa-admin-main">
+        @Body
+    </main>
+</div>

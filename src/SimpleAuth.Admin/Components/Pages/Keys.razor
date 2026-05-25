@@ -1,0 +1,72 @@
+@page "/admin/keys"
+@layout AdminLayout
+@inject ISigningKeyStore KeyStore
+
+<div class="sa-page-header">
+    <h1>Signing Keys</h1>
+</div>
+
+<BbCard>
+    <BbCardHeader>
+        <BbCardTitle>Active Keys</BbCardTitle>
+        <BbCardDescription>Keys used for signing tokens</BbCardDescription>
+    </BbCardHeader>
+    <BbCardContent>
+        @if (_keys is null)
+        {
+            <p>Loading...</p>
+        }
+        else if (_keys.Count == 0)
+        {
+            <p>No signing keys found.</p>
+        }
+        else
+        {
+            <table class="sa-table">
+                <thead>
+                    <tr>
+                        <th>Key ID</th>
+                        <th>Algorithm</th>
+                        <th>Created</th>
+                        <th>Retires At</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var key in _keys)
+                    {
+                        <tr>
+                            <td><code>@key.KeyId</code></td>
+                            <td><BbBadge>@key.Algorithm</BbBadge></td>
+                            <td>@key.CreatedAt.ToString("g")</td>
+                            <td>@key.RetireAt.ToString("g")</td>
+                            <td>
+                                @if (key.IsPrimary)
+                                {
+                                    <BbBadge>Primary</BbBadge>
+                                }
+                                else if (key.RetireAt < DateTime.UtcNow)
+                                {
+                                    <BbBadge>Retired</BbBadge>
+                                }
+                                else
+                                {
+                                    <BbBadge>Active</BbBadge>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </BbCardContent>
+</BbCard>
+
+@code {
+    private IReadOnlyList<SigningKeyInfo>? _keys;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _keys = await KeyStore.GetActiveKeysAsync();
+    }
+}

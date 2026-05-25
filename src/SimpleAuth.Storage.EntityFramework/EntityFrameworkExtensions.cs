@@ -42,6 +42,12 @@ public static class EntityFrameworkExtensions
         services.AddScoped<IJtiStore>(sp => new EfJtiStore(sp.GetRequiredService<TContext>()));
         services.AddScoped<IConsentStore>(sp => new EfConsentStore(sp.GetRequiredService<TContext>()));
 
+        // Admin stores
+        services.AddScoped<IAdminClientStore>(sp => new EfAdminClientStore(sp.GetRequiredService<TContext>()));
+        services.AddScoped<IAdminResourceStore>(sp => new EfAdminResourceStore(sp.GetRequiredService<TContext>()));
+        services.AddScoped<IAdminTokenStore>(sp => new EfAdminTokenStore(sp.GetRequiredService<TContext>()));
+        services.AddScoped<IServerSettingsStore>(sp => new EfServerSettingsStore(sp.GetRequiredService<TContext>()));
+
         return services;
     }
 

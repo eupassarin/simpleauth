@@ -1,0 +1,68 @@
+@page "/admin"
+@layout AdminLayout
+@inject IAdminClientStore ClientStore
+@inject IAdminTokenStore TokenStore
+@inject IAdminResourceStore ResourceStore
+
+<h1>Dashboard</h1>
+
+<div class="sa-dashboard-grid">
+    <BbCard>
+        <BbCardHeader>
+            <BbCardTitle>Clients</BbCardTitle>
+            <BbCardDescription>Registered applications</BbCardDescription>
+        </BbCardHeader>
+        <BbCardContent>
+            <span class="sa-stat">@_clientCount</span>
+        </BbCardContent>
+    </BbCard>
+
+    <BbCard>
+        <BbCardHeader>
+            <BbCardTitle>Active Tokens</BbCardTitle>
+            <BbCardDescription>Access + refresh tokens</BbCardDescription>
+        </BbCardHeader>
+        <BbCardContent>
+            <span class="sa-stat">@_tokenCount</span>
+        </BbCardContent>
+    </BbCard>
+
+    <BbCard>
+        <BbCardHeader>
+            <BbCardTitle>Scopes</BbCardTitle>
+            <BbCardDescription>API + identity scopes</BbCardDescription>
+        </BbCardHeader>
+        <BbCardContent>
+            <span class="sa-stat">@_scopeCount</span>
+        </BbCardContent>
+    </BbCard>
+
+    <BbCard>
+        <BbCardHeader>
+            <BbCardTitle>Resources</BbCardTitle>
+            <BbCardDescription>Protected resources</BbCardDescription>
+        </BbCardHeader>
+        <BbCardContent>
+            <span class="sa-stat">@_resourceCount</span>
+        </BbCardContent>
+    </BbCard>
+</div>
+
+@code {
+    private int _clientCount;
+    private int _tokenCount;
+    private int _scopeCount;
+    private int _resourceCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var clients = await ClientStore.GetAllAsync();
+        _clientCount = clients.Count;
+        _tokenCount = await TokenStore.CountActiveTokensAsync() + await TokenStore.CountActiveRefreshTokensAsync();
+        var scopes = await ResourceStore.GetAllScopesAsync();
+        var identityScopes = await ResourceStore.GetAllIdentityScopesAsync();
+        _scopeCount = scopes.Count + identityScopes.Count;
+        var resources = await ResourceStore.GetAllResourcesAsync();
+        _resourceCount = resources.Count;
+    }
+}

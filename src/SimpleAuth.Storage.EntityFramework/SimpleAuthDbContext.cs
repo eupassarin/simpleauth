@@ -38,6 +38,9 @@ public class SimpleAuthDbContext : DbContext
     /// <summary>User consent records.</summary>
     internal DbSet<UserConsentEntity> UserConsents => Set<UserConsentEntity>();
 
+    /// <summary>Server settings (key-value, runtime configurable via admin GUI).</summary>
+    internal DbSet<ServerSettingsEntity> ServerSettings => Set<ServerSettingsEntity>();
+
     /// <summary>API scope registrations.</summary>
     internal DbSet<ScopeEntity> Scopes => Set<ScopeEntity>();
 
@@ -61,6 +64,7 @@ public class SimpleAuthDbContext : DbContext
         ConfigureJtiRecord(modelBuilder.Entity<JtiRecordEntity>());
         ConfigureUserConsent(modelBuilder.Entity<UserConsentEntity>());
         ConfigureIdentityScope(modelBuilder.Entity<IdentityScopeEntity>());
+        ConfigureServerSettings(modelBuilder.Entity<ServerSettingsEntity>());
     }
 
     // ── Entity configurations ────────────────────────────────────────────────────
@@ -126,6 +130,9 @@ public class SimpleAuthDbContext : DbContext
 
     private static void ConfigureIdentityScope(EntityTypeBuilder<IdentityScopeEntity> b) =>
         b.ToTable("IdentityScopes");
+
+    private static void ConfigureServerSettings(EntityTypeBuilder<ServerSettingsEntity> b) =>
+        b.ToTable("ServerSettings");
 }
 
 /// <summary>Reusable JSON value converters for entity collections.</summary>

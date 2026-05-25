@@ -1,0 +1,87 @@
+@page "/admin/clients"
+@layout AdminLayout
+@inject IAdminClientStore ClientStore
+@inject NavigationManager Nav
+
+<div class="sa-page-header">
+    <h1>Clients</h1>
+    <BbButton OnClick="CreateNew">
+        <LucideIcon Name="plus" Size="16" />
+        New Client
+    </BbButton>
+</div>
+
+@if (_clients is null)
+{
+    <p>Loading...</p>
+}
+else if (_clients.Count == 0)
+{
+    <BbCard>
+        <BbCardContent>
+            <p>No clients registered yet.</p>
+        </BbCardContent>
+    </BbCard>
+}
+else
+{
+    <BbCard>
+        <BbCardContent>
+            <table class="sa-table">
+                <thead>
+                    <tr>
+                        <th>Client ID</th>
+                        <th>Name</th>
+                        <th>Auth Method</th>
+                        <th>Redirect URIs</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var client in _clients)
+                    {
+                        <tr>
+                            <td><code>@client.ClientId</code></td>
+                            <td>@client.ClientName</td>
+                            <td><BbBadge>@client.TokenEndpointAuthMethod</BbBadge></td>
+                            <td>@client.RedirectUris.Count</td>
+                            <td>
+                                <BbButton Size="ButtonSize.Small" OnClick="() => EditClient(client.ClientId)">
+                                    Edit
+                                </BbButton>
+                                <BbButton Size="ButtonSize.Small" Variant="ButtonVariant.Destructive" OnClick="() => DeleteClient(client.ClientId)">
+                                    Delete
+                                </BbButton>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </BbCardContent>
+    </BbCard>
+}
+
+@code {
+    private IReadOnlyList<Client>? _clients;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _clients = await ClientStore.GetAllAsync();
+    }
+
+    private void CreateNew()
+    {
+        Nav.NavigateTo("admin/clients/new");
+    }
+
+    private void EditClient(string clientId)
+    {
+        Nav.NavigateTo($"admin/clients/{clientId}");
+    }
+
+    private async Task DeleteClient(string clientId)
+    {
+        await ClientStore.DeleteAsync(clientId);
+        _clients = await ClientStore.GetAllAsync();
+    }
+}

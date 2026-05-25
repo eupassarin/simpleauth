@@ -1,0 +1,89 @@
+@page "/admin/tokens"
+@layout AdminLayout
+@inject IAdminTokenStore TokenStore
+
+<div class="sa-page-header">
+    <h1>Active Tokens</h1>
+</div>
+
+<BbCard>
+    <BbCardHeader>
+        <BbCardTitle>Token Browser</BbCardTitle>
+        <BbCardDescription>@_totalCount active access tokens</BbCardDescription>
+    </BbCardHeader>
+    <BbCardContent>
+        <div class="sa-form-group">
+            <BbInput Value="@_filter" ValueChanged="OnFilterChanged" Placeholder="Filter by client ID..." />
+        </div>
+
+        @if (_tokens is null)
+        {
+            <p>Loading...</p>
+        }
+        else if (_tokens.Count == 0)
+        {
+            <p>No active tokens found.</p>
+        }
+        else
+        {
+            <table class="sa-table">
+                <thead>
+                    <tr>
+                        <th>Handle</th>
+                        <th>Client</th>
+                        <th>Subject</th>
+                        <th>Expires</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var token in _tokens)
+                    {
+                        <tr>
+                            <td><code>@token.Handle[..8]...</code></td>
+                            <td><code>@token.ClientId</code></td>
+                            <td>@(token.SubjectId ?? "—")</td>
+                            <td>@token.ExpiresAt.ToString("g")</td>
+                            <td>
+                                <BbButton Size="ButtonSize.Small" Variant="ButtonVariant.Destructive"
+                                          OnClick="() => RevokeToken(token.Handle)">
+                                    Revoke
+                                </BbButton>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </BbCardContent>
+</BbCard>
+
+@code {
+    private IReadOnlyList<TokenSummary>? _tokens;
+    private int _totalCount;
+    private string _filter = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTokensAsync();
+    }
+
+    private async Task OnFilterChanged(string value)
+    {
+        _filter = value;
+        await LoadTokensAsync();
+    }
+
+    private async Task LoadTokensAsync()
+    {
+        _totalCount = await TokenStore.CountActiveTokensAsync();
+        string? clientFilter = string.IsNullOrWhiteSpace(_filter) ? null : _filter;
+        _tokens = await TokenStore.GetActiveTokensAsync(clientId: clientFilter, skip: 0, take: 50);
+    }
+
+    private async Task RevokeToken(string handle)
+    {
+        await TokenStore.RevokeTokenAsync(handle);
+        await LoadTokensAsync();
+    }
+}
