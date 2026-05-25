@@ -5,32 +5,30 @@
 @inject SimpleAuthGuiConfiguration Config
 @inject NavigationManager Nav
 
-<div class="sa-login-container">
-    <BbCard>
-        <BbCardHeader>
-            <BbCardTitle>SimpleAuth Admin</BbCardTitle>
-            <BbCardDescription>Sign in to manage your server</BbCardDescription>
-        </BbCardHeader>
-        <BbCardContent>
-            @if (_error)
-            {
-                <BbAlert>Invalid username or password.</BbAlert>
-            }
-            <form method="post" @formname="admin-login">
-                <AntiforgeryToken />
-                <div class="sa-form-group">
-                    <BbLabel>Username</BbLabel>
-                    <input type="text" name="Username" class="sa-input" required autocomplete="username" />
-                </div>
-                <div class="sa-form-group">
-                    <BbLabel>Password</BbLabel>
-                    <input type="password" name="Password" class="sa-input" required autocomplete="current-password" />
-                </div>
-                <button type="submit" class="bb-button">Sign In</button>
-            </form>
-        </BbCardContent>
-    </BbCard>
-</div>
+<BbCard>
+    <BbCardHeader>
+        <BbCardTitle>SimpleAuth Admin</BbCardTitle>
+        <BbCardDescription>Sign in to manage your server</BbCardDescription>
+    </BbCardHeader>
+    <BbCardContent>
+        @if (_error)
+        {
+            <BbAlert>Invalid username or password.</BbAlert>
+        }
+        <form method="post" @formname="admin-login">
+            <AntiforgeryToken />
+            <div class="sa-form-group">
+                <BbLabel>Username</BbLabel>
+                <input type="text" name="Username" class="sa-input" required autocomplete="username" />
+            </div>
+            <div class="sa-form-group">
+                <BbLabel>Password</BbLabel>
+                <input type="password" name="Password" class="sa-input" required autocomplete="current-password" />
+            </div>
+            <button type="submit" class="bb-button">Sign In</button>
+        </form>
+    </BbCardContent>
+</BbCard>
 
 @code {
     [SupplyParameterFromForm(FormName = "admin-login")]
