@@ -36,7 +36,7 @@ public static class SimpleAuthGuiExtensions
             {
                 options.Cookie.Name = config.CookieName;
                 options.Cookie.HttpOnly = true;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                 options.Cookie.SameSite = SameSiteMode.Lax;
                 options.ExpireTimeSpan = config.SessionLifetime;
                 options.LoginPath = $"{config.PathPrefix}/login";
@@ -58,12 +58,15 @@ public static class SimpleAuthGuiExtensions
 
     /// <summary>
     /// Maps the SimpleAuth admin GUI endpoints (Blazor Server + login/logout).
-    /// Also registers the antiforgery middleware required by Blazor.
-    /// Call this after <c>UseAuthentication</c> and <c>UseAuthorization</c>.
+    /// Registers all required middleware: static files, authentication, authorization,
+    /// and antiforgery. A single call is all that's needed.
     /// </summary>
     public static WebApplication MapSimpleAuthGui(this WebApplication app)
     {
-        // Blazor interactive server components require antiforgery middleware
+        // Required middleware — safe to call even if already registered by the host
+        app.UseStaticFiles();
+        app.UseAuthentication();
+        app.UseAuthorization();
         app.UseAntiforgery();
 
         SimpleAuthGuiConfiguration config = app.Services

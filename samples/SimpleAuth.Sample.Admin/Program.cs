@@ -15,7 +15,7 @@ builder.Services.AddDbContext<SimpleAuthDbContext>(options =>
 // Configure SimpleAuth OAuth 2.1 + OIDC server
 builder.Services.AddSimpleAuth(server =>
 {
-    server.Issuer = builder.Configuration["SimpleAuth:Issuer"] ?? "https://localhost:5001";
+    server.Issuer = builder.Configuration["SimpleAuth:Issuer"] ?? "http://localhost:5000";
     server.Keys.UseDevelopmentKey();
     server.RateLimit.Enabled = false; // Dev mode
 });
@@ -39,12 +39,10 @@ using (var scope = app.Services.CreateScope())
     await db.Database.EnsureCreatedAsync();
 }
 
-app.UseHttpsRedirection();
-
 // Map OAuth/OIDC endpoints
 app.MapSimpleAuth();
 
-// Map Admin GUI at /admin
+// Map Admin GUI at /admin (also registers UseStaticFiles, UseAuthentication, etc.)
 app.MapSimpleAuthGui();
 
 app.Run();
