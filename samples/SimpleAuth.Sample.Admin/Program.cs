@@ -15,7 +15,7 @@ builder.Services.AddDbContext<SimpleAuthDbContext>(options =>
 // Configure SimpleAuth OAuth 2.1 + OIDC server
 builder.Services.AddSimpleAuth(server =>
 {
-    server.Issuer = builder.Configuration["SimpleAuth:Issuer"] ?? "http://localhost:5000";
+    server.Issuer = builder.Configuration["SimpleAuth:Issuer"] ?? "http://localhost:5099";
     server.Keys.UseDevelopmentKey();
     server.RateLimit.Enabled = false; // Dev mode
 });
