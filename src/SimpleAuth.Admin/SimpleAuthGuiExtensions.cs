@@ -62,7 +62,6 @@ public static class SimpleAuthGuiExtensions
     /// </summary>
     public static WebApplication UseSimpleAuthGui(this WebApplication app)
     {
-        app.UseStaticFiles();
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseAntiforgery();
@@ -79,6 +78,9 @@ public static class SimpleAuthGuiExtensions
             .GetRequiredService<SimpleAuthGuiConfiguration>();
 
         string prefix = config.PathPrefix.TrimEnd('/');
+
+        // Serve static web assets (_content/*, _framework/*)
+        app.MapStaticAssets();
 
         // Login POST endpoint
         app.MapPost($"{prefix}/login", async context =>

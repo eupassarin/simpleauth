@@ -3,6 +3,9 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>SimpleAuth.Sample.Admin</RootNamespace>
+    <!-- Required: host app has no .razor files (all in SimpleAuth.Admin RCL), but
+         we still need the Blazor framework assets (blazor.web.js) served correctly. -->
+    <RequiresAspNetWebAssets>true</RequiresAspNetWebAssets>
   </PropertyGroup>
 
   <ItemGroup>
